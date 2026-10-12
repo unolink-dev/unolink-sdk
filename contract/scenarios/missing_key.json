@@ -1,0 +1,12 @@
+{
+  "name": "missing_key",
+  "description": "Requests without a key get 401 invalid_key.",
+  "setup": { "plan": "pro", "key": "none" },
+  "steps": [
+    {
+      "request": { "method": "POST", "path": "/v1/install", "body": {
+        "installId": "${uuid:install}", "platform": "ios", "sdk": { "name": "ios", "version": "1.0.0" } } },
+      "expect": { "status": 401, "body": { "code": "invalid_key" } }
+    }
+  ]
+}

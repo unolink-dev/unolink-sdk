@@ -1,0 +1,15 @@
+.DS_Store
+.idea/
+*.iml
+local.properties
+.gradle/
+build/
+captures/
+.build/
+.swiftpm/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+Pods/
+node_modules/
+.dart_tool/

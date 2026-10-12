@@ -1,0 +1,19 @@
+{
+  "name": "quota_exceeded",
+  "description": "Over twice the plan's monthly SDK events, custom events are rejected; lifecycle and funnel events are kept.",
+  "setup": { "plan": "pro", "key": "valid", "usageThisMonth": 2000000 },
+  "steps": [
+    {
+      "request": { "method": "POST", "path": "/v1/install", "body": {
+        "installId": "${uuid:install}", "platform": "android", "sdk": { "name": "android", "version": "1.0.0" } } },
+      "expect": { "status": 200 }
+    },
+    {
+      "request": { "method": "POST", "path": "/v1/events", "body": { "installId": "${uuid:install}", "events": [
+        { "id": "${uuid:custom}", "name": "level_up", "timestamp": "${now}" },
+        { "id": "${uuid:funnel}", "name": "trial_started", "timestamp": "${now}" },
+        { "id": "${uuid:lifecycle}", "name": "session_start", "timestamp": "${now}" } ] } },
+      "expect": { "status": 202, "body": { "accepted": 2, "rejected": [ { "id": "${uuid:custom}", "code": "quota_exceeded" } ] } }
+    }
+  ]
+}

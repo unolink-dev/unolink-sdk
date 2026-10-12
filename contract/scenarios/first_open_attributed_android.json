@@ -1,0 +1,19 @@
+{
+  "name": "first_open_attributed_android",
+  "description": "An Android install from a campaign link is attributed to it and gets the link's deep link and params.",
+  "setup": { "plan": "pro", "key": "valid", "links": [{ "slug": "tiktok", "deepLink": "/promo/3for2", "params": { "offer": "3for2" } }] },
+  "steps": [
+    { "click": { "link": "tiktok", "query": "utm_source=tiktok&utm_content=ad7", "save": "c1" } },
+    {
+      "request": { "method": "POST", "path": "/v1/install", "body": {
+        "installId": "${uuid:install}", "platform": "android", "sdk": { "name": "android", "version": "1.0.0" },
+        "osVersion": "15", "appVersion": "1.9.5", "deviceClass": "phone", "locale": "en-GB", "isDebug": false,
+        "playReferrer": { "raw": "${referrer:c1}", "clickAt": 1760000000, "installBeginAt": 1760000100 } } },
+      "expect": { "status": 200, "schema": "install-response", "body": { "attribution": {
+        "status": "attributed", "source": "play_referrer", "clickId": "${clickId:c1}",
+        "link": { "slug": "tiktok", "isDefault": false },
+        "deepLink": "/promo/3for2", "params": { "offer": "3for2" },
+        "utm": { "source": "tiktok", "content": "ad7" } } } }
+    }
+  ]
+}

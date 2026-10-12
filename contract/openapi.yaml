@@ -1,0 +1,72 @@
+openapi: 3.1.0
+info:
+  title: Unolink SDK API
+  version: "1"
+  description: The API Unolink's SDKs call. See README.md for the rules (retries, error codes, events).
+  license: { name: MIT, identifier: MIT }
+servers:
+  - url: https://api.unolink.dev
+  - url: https://api-uat.unolink.dev
+security:
+  - sdkKey: []
+components:
+  securitySchemes:
+    sdkKey: { type: apiKey, in: header, name: X-Unolink-Key }
+  responses:
+    Problem:
+      description: Error with a stable code
+      content:
+        application/problem+json:
+          schema: { $ref: "schemas/problem.schema.json" }
+paths:
+  /v1/install:
+    post:
+      summary: First open. Records the install (idempotent per installId) and returns its attribution.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "schemas/install-request.schema.json" }
+      responses:
+        "200":
+          description: The install's attribution
+          content:
+            application/json:
+              schema: { $ref: "schemas/install-response.schema.json" }
+        "400": { $ref: "#/components/responses/Problem" }
+        "401": { $ref: "#/components/responses/Problem" }
+        "403": { $ref: "#/components/responses/Problem" }
+        "429": { description: Too many requests from this IP; retry with backoff }
+  /v1/events:
+    post:
+      summary: A batch of up to 100 events, deduplicated by event id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "schemas/events-request.schema.json" }
+      responses:
+        "202":
+          description: Accepted, duplicate and rejected counts
+          content:
+            application/json:
+              schema: { $ref: "schemas/events-response.schema.json" }
+        "400": { $ref: "#/components/responses/Problem" }
+        "401": { $ref: "#/components/responses/Problem" }
+        "403": { $ref: "#/components/responses/Problem" }
+        "409": { $ref: "#/components/responses/Problem" }
+        "429": { description: Too many requests from this IP; retry with backoff }
+  /v1/clicks/{clickId}:
+    get:
+      summary: Resolves a click ID from the Google Play install referrer.
+      parameters:
+        - { name: clickId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: The click's link, deep link, params and UTM tags
+          content:
+            application/json:
+              schema: { $ref: "schemas/click-response.schema.json" }
+        "401": { $ref: "#/components/responses/Problem" }
+        "403": { $ref: "#/components/responses/Problem" }
+        "404": { $ref: "#/components/responses/Problem" }

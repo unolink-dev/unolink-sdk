@@ -1,0 +1,12 @@
+{
+  "name": "sdk_disabled",
+  "description": "An app whose owner's plan has no SDK gets 403 sdk_disabled; the SDK stops sending until the next launch.",
+  "setup": { "plan": "indie", "key": "valid" },
+  "steps": [
+    {
+      "request": { "method": "POST", "path": "/v1/install", "body": {
+        "installId": "${uuid:install}", "platform": "android", "sdk": { "name": "android", "version": "1.0.0" } } },
+      "expect": { "status": 403, "schema": "problem", "body": { "code": "sdk_disabled" } }
+    }
+  ]
+}

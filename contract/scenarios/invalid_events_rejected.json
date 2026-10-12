@@ -1,0 +1,25 @@
+{
+  "name": "invalid_events_rejected",
+  "description": "Invalid events are rejected one by one with code validation; valid events in the same batch are kept.",
+  "setup": { "plan": "pro", "key": "valid" },
+  "steps": [
+    {
+      "request": { "method": "POST", "path": "/v1/install", "body": {
+        "installId": "${uuid:install}", "platform": "android", "sdk": { "name": "android", "version": "1.0.0" } } },
+      "expect": { "status": 200 }
+    },
+    {
+      "request": { "method": "POST", "path": "/v1/events", "body": { "installId": "${uuid:install}", "events": [
+        { "id": "${uuid:ok}", "name": "trial_started", "timestamp": "${now}" },
+        { "id": "${uuid:no_revenue}", "name": "purchase", "timestamp": "${now}" },
+        { "id": "${uuid:bad_name}", "name": "bad name", "timestamp": "${now}" },
+        { "id": "${uuid:bad_amount}", "name": "purchase", "timestamp": "${now}", "revenue": { "amount": "1,99", "currency": "USD" } },
+        { "id": "${uuid:stray_revenue}", "name": "paywall_viewed", "timestamp": "${now}", "revenue": { "amount": "1", "currency": "USD" } } ] } },
+      "expect": { "status": 202, "body": { "accepted": 1, "duplicates": 0, "rejected": [
+        { "id": "${uuid:no_revenue}", "code": "validation" },
+        { "id": "${uuid:bad_name}", "code": "validation" },
+        { "id": "${uuid:bad_amount}", "code": "validation" },
+        { "id": "${uuid:stray_revenue}", "code": "validation" } ] } }
+    }
+  ]
+}

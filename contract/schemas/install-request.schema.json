@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unolink.dev/schemas/v1/install-request.json",
+  "title": "POST /v1/install request",
+  "type": "object",
+  "required": ["installId", "platform", "sdk"],
+  "properties": {
+    "installId": { "type": "string", "format": "uuid" },
+    "platform": { "enum": ["android", "ios"] },
+    "sdk": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "enum": ["android", "ios", "react-native", "flutter"] },
+        "version": { "type": "string", "minLength": 1, "maxLength": 16 }
+      }
+    },
+    "osVersion": { "type": ["string", "null"], "maxLength": 32 },
+    "appVersion": { "type": ["string", "null"], "maxLength": 32 },
+    "deviceClass": { "enum": ["phone", "tablet", null] },
+    "locale": { "type": ["string", "null"], "maxLength": 35 },
+    "isDebug": { "type": "boolean" },
+    "playReferrer": {
+      "type": ["object", "null"],
+      "properties": {
+        "raw": { "type": ["string", "null"], "maxLength": 4096 },
+        "clickAt": { "type": ["integer", "null"] },
+        "installBeginAt": { "type": ["integer", "null"] }
+      }
+    }
+  }
+}

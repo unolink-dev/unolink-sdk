@@ -1,0 +1,22 @@
+{
+  "name": "install_required_then_retry",
+  "description": "Events for an installId the server doesn't know get 409 install_required; after /v1/install the same batch succeeds.",
+  "setup": { "plan": "pro", "key": "valid" },
+  "steps": [
+    {
+      "request": { "method": "POST", "path": "/v1/events", "body": { "installId": "${uuid:install}", "events": [
+        { "id": "${uuid:e1}", "name": "paywall_viewed", "timestamp": "${now}" } ] } },
+      "expect": { "status": 409, "schema": "problem", "body": { "code": "install_required" } }
+    },
+    {
+      "request": { "method": "POST", "path": "/v1/install", "body": {
+        "installId": "${uuid:install}", "platform": "android", "sdk": { "name": "android", "version": "1.0.0" } } },
+      "expect": { "status": 200 }
+    },
+    {
+      "request": { "method": "POST", "path": "/v1/events", "body": { "installId": "${uuid:install}", "events": [
+        { "id": "${uuid:e1}", "name": "paywall_viewed", "timestamp": "${now}" } ] } },
+      "expect": { "status": 202, "body": { "accepted": 1, "duplicates": 0 } }
+    }
+  ]
+}

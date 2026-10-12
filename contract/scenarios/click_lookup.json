@@ -1,0 +1,15 @@
+{
+  "name": "click_lookup",
+  "description": "GET /v1/clicks/{clickId} returns the link, its current deep link and params, and the UTM tags.",
+  "setup": { "plan": "pro", "key": "valid", "links": [{ "slug": "tiktok", "deepLink": "/promo/3for2", "params": { "offer": "3for2" } }] },
+  "steps": [
+    { "click": { "link": "tiktok", "query": "utm_source=tiktok&utm_campaign=launch", "save": "c1" } },
+    {
+      "request": { "method": "GET", "path": "/v1/clicks/${clickId:c1}" },
+      "expect": { "status": 200, "schema": "click-response", "body": {
+        "clickId": "${clickId:c1}", "link": { "slug": "tiktok", "isDefault": false },
+        "deepLink": "/promo/3for2", "params": { "offer": "3for2" },
+        "utm": { "source": "tiktok", "campaign": "launch" } } }
+    }
+  ]
+}

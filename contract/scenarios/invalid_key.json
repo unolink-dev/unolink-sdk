@@ -1,0 +1,17 @@
+{
+  "name": "invalid_key",
+  "description": "A revoked key gets 401 invalid_key on every endpoint.",
+  "setup": { "plan": "pro", "key": "revoked" },
+  "steps": [
+    {
+      "request": { "method": "POST", "path": "/v1/install", "body": {
+        "installId": "${uuid:install}", "platform": "android", "sdk": { "name": "android", "version": "1.0.0" } } },
+      "expect": { "status": 401, "schema": "problem", "body": { "code": "invalid_key" } }
+    },
+    {
+      "request": { "method": "POST", "path": "/v1/events", "body": { "installId": "${uuid:install}", "events": [
+        { "id": "${uuid:e1}", "name": "paywall_viewed", "timestamp": "${now}" } ] } },
+      "expect": { "status": 401, "body": { "code": "invalid_key" } }
+    }
+  ]
+}

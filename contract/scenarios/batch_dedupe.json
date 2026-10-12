@@ -1,0 +1,27 @@
+{
+  "name": "batch_dedupe",
+  "description": "Resending a batch is safe: already-stored event IDs come back as duplicates.",
+  "setup": { "plan": "pro", "key": "valid" },
+  "steps": [
+    {
+      "request": { "method": "POST", "path": "/v1/install", "body": {
+        "installId": "${uuid:install}", "platform": "ios", "sdk": { "name": "ios", "version": "1.0.0" } } },
+      "expect": { "status": 200 }
+    },
+    {
+      "request": { "method": "POST", "path": "/v1/events", "body": { "installId": "${uuid:install}", "events": [
+        { "id": "${uuid:e1}", "name": "first_open", "timestamp": "${now}" },
+        { "id": "${uuid:e2}", "name": "onboarding_completed", "timestamp": "${now}", "properties": { "steps": 4 } },
+        { "id": "${uuid:e3}", "name": "purchase", "timestamp": "${now}", "revenue": { "amount": "49.99", "currency": "USD" } } ] } },
+      "expect": { "status": 202, "schema": "events-response", "body": { "accepted": 3, "duplicates": 0, "rejected": [] } }
+    },
+    {
+      "request": { "method": "POST", "path": "/v1/events", "body": { "installId": "${uuid:install}", "events": [
+        { "id": "${uuid:e1}", "name": "first_open", "timestamp": "${now}" },
+        { "id": "${uuid:e2}", "name": "onboarding_completed", "timestamp": "${now}", "properties": { "steps": 4 } },
+        { "id": "${uuid:e3}", "name": "purchase", "timestamp": "${now}", "revenue": { "amount": "49.99", "currency": "USD" } },
+        { "id": "${uuid:e4}", "name": "paywall_viewed", "timestamp": "${daysAgo:30}" } ] } },
+      "expect": { "status": 202, "body": { "accepted": 1, "duplicates": 3, "rejected": [] } }
+    }
+  ]
+}

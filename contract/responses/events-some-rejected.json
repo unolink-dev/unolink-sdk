@@ -1,0 +1,5 @@
+{
+  "status": 202,
+  "body": { "accepted": 1, "duplicates": 0, "rejected": [
+    { "id": "00000000-0000-4000-8000-000000000002", "code": "quota_exceeded", "message": "This account is over twice its plan's monthly SDK events." } ] }
+}

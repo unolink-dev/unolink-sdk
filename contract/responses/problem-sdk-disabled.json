@@ -1,0 +1,1 @@
+{ "status": 403, "body": { "status": 403, "title": "SDK disabled", "detail": "This app's owner is not on a plan that includes the SDK.", "code": "sdk_disabled" } }

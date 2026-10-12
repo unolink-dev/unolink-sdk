@@ -1,0 +1,20 @@
+{
+  "name": "install_is_idempotent",
+  "description": "Resending /v1/install with the same installId returns the same attribution (safe to retry).",
+  "setup": { "plan": "pro", "key": "valid", "links": [{ "slug": "tiktok" }] },
+  "steps": [
+    { "click": { "link": "tiktok", "save": "c1" } },
+    {
+      "request": { "method": "POST", "path": "/v1/install", "body": {
+        "installId": "${uuid:install}", "platform": "android", "sdk": { "name": "android", "version": "1.0.0" },
+        "playReferrer": { "raw": "${referrer:c1}" } } },
+      "expect": { "status": 200, "body": { "attribution": { "status": "attributed", "clickId": "${clickId:c1}" } } }
+    },
+    {
+      "request": { "method": "POST", "path": "/v1/install", "body": {
+        "installId": "${uuid:install}", "platform": "android", "sdk": { "name": "android", "version": "1.0.0" },
+        "playReferrer": { "raw": "${referrer:c1}" } } },
+      "expect": { "status": 200, "body": { "attribution": { "status": "attributed", "clickId": "${clickId:c1}" } } }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unolink.dev/schemas/v1/problem.json",
+  "title": "Error (RFC 9457 problem details)",
+  "type": "object",
+  "required": ["status", "title"],
+  "properties": {
+    "status": { "type": "integer" },
+    "title": { "type": "string" },
+    "detail": { "type": ["string", "null"] },
+    "code": { "enum": ["invalid_key", "install_required", "quota_exceeded", "sdk_disabled", "validation"] }
+  }
+}

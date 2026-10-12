@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unolink.dev/schemas/v1/events-response.json",
+  "title": "POST /v1/events response (202)",
+  "type": "object",
+  "required": ["accepted", "duplicates", "rejected"],
+  "properties": {
+    "accepted": { "type": "integer", "minimum": 0 },
+    "duplicates": { "type": "integer", "minimum": 0 },
+    "rejected": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "code", "message"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "code": { "enum": ["validation", "quota_exceeded"] },
+          "message": { "type": "string" }
+        }
+      }
+    }
+  }
+}

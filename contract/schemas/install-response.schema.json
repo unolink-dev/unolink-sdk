@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unolink.dev/schemas/v1/install-response.json",
+  "title": "POST /v1/install response",
+  "type": "object",
+  "required": ["attribution"],
+  "properties": {
+    "attribution": {
+      "type": "object",
+      "required": ["status", "source", "params"],
+      "properties": {
+        "status": { "enum": ["attributed", "uncertain", "unattributed"] },
+        "source": { "enum": ["play_referrer", "none"] },
+        "clickId": { "type": ["string", "null"], "pattern": "^clk_[0-9A-HJKMNP-TV-Z]{26}$" },
+        "link": {
+          "type": ["object", "null"],
+          "required": ["name", "isDefault"],
+          "properties": {
+            "slug": { "type": ["string", "null"] },
+            "name": { "type": "string" },
+            "isDefault": { "type": "boolean" }
+          }
+        },
+        "deepLink": { "type": ["string", "null"] },
+        "params": { "type": "object", "additionalProperties": { "type": "string" } },
+        "utm": { "$ref": "#/$defs/utm" }
+      }
+    }
+  },
+  "$defs": {
+    "utm": {
+      "type": ["object", "null"],
+      "properties": {
+        "source": { "type": ["string", "null"] },
+        "medium": { "type": ["string", "null"] },
+        "campaign": { "type": ["string", "null"] },
+        "term": { "type": ["string", "null"] },
+        "content": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

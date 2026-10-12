@@ -1,0 +1,8 @@
+{
+  "status": 200,
+  "body": { "attribution": {
+    "status": "attributed", "source": "play_referrer", "clickId": "clk_01JA9Q3F6Z8W2K4N7R5T1V0X3Y",
+    "link": { "slug": "tiktok", "name": "TikTok", "isDefault": false },
+    "deepLink": "/promo/3for2", "params": { "offer": "3for2" },
+    "utm": { "source": "tiktok", "medium": null, "campaign": "launch", "term": null, "content": "ad7" } } }
+}

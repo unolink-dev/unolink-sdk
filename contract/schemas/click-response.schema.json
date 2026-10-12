@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unolink.dev/schemas/v1/click-response.json",
+  "title": "GET /v1/clicks/{clickId} response",
+  "type": "object",
+  "required": ["clickId", "occurredAt", "link", "params", "utm"],
+  "properties": {
+    "clickId": { "type": "string" },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "link": {
+      "type": "object",
+      "required": ["name", "isDefault"],
+      "properties": { "slug": { "type": ["string", "null"] }, "name": { "type": "string" }, "isDefault": { "type": "boolean" } }
+    },
+    "deepLink": { "type": ["string", "null"] },
+    "params": { "type": "object", "additionalProperties": { "type": "string" } },
+    "utm": { "type": "object" }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "ios_unattributed",
+  "description": "iOS installs are always unattributed: there is no install referrer, and Unolink never fingerprints.",
+  "setup": { "plan": "pro", "key": "valid", "links": [{ "slug": "tiktok" }] },
+  "steps": [
+    { "click": { "link": "tiktok", "save": "c1" } },
+    {
+      "request": { "method": "POST", "path": "/v1/install", "body": {
+        "installId": "${uuid:install}", "platform": "ios", "sdk": { "name": "ios", "version": "1.0.0" },
+        "osVersion": "26.0", "deviceClass": "phone" } },
+      "expect": { "status": 200, "schema": "install-response", "body": { "attribution": {
+        "status": "unattributed", "source": "none", "clickId": null, "link": null, "deepLink": null, "params": {} } } }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "organic_android_unattributed",
+  "description": "An Android install without a Unolink click ID (e.g. a Play Store search) is unattributed.",
+  "setup": { "plan": "pro", "key": "valid" },
+  "steps": [
+    {
+      "request": { "method": "POST", "path": "/v1/install", "body": {
+        "installId": "${uuid:install}", "platform": "android", "sdk": { "name": "android", "version": "1.0.0" },
+        "playReferrer": { "raw": "utm_source=google-play&utm_medium=organic" } } },
+      "expect": { "status": 200, "body": { "attribution": { "status": "unattributed", "source": "none", "link": null } } }
+    }
+  ]
+}
