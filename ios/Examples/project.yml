@@ -1,0 +1,44 @@
+# Generate the Xcode project with: cd ios/Examples && xcodegen
+name: UnolinkExamples
+options:
+  bundleIdPrefix: dev.unolink
+  deploymentTarget:
+    iOS: "15.0"
+packages:
+  Unolink:
+    path: ../..
+configFiles:
+  Debug: Base.xcconfig
+  Release: Base.xcconfig
+targets:
+  SwiftUISample:
+    type: application
+    platform: iOS
+    sources: [SwiftUISample]
+    dependencies:
+      - package: Unolink
+    info:
+      path: SwiftUISample/Info.plist
+      properties:
+        CFBundleDisplayName: Unolink Sample
+        UILaunchScreen: {}
+        UnolinkKey: $(UNOLINK_KEY)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.unolink.sample
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+  ObjCSample:
+    type: application
+    platform: iOS
+    sources: [ObjCSample]
+    dependencies:
+      - package: Unolink
+    info:
+      path: ObjCSample/Info.plist
+      properties:
+        CFBundleDisplayName: Unolink ObjC
+        UILaunchScreen: {}
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.unolink.sampleobjc

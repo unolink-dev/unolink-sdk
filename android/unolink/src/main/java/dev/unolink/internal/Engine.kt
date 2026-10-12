@@ -64,22 +64,26 @@ internal class Engine(
     @Volatile var publicInstallId: String? = null
         private set
 
-    /** Cold start. [waitForReferrer]: Android first launch, where Google Play may know which link this came from. */
-    fun start(waitForReferrer: Boolean) = scheduler.execute {
+    /**
+     * Cold start. [waitForReferrer]: Android first launch, where Google Play may know which link this came from. The
+     * install ID is loaded (or created) synchronously, so it is available as soon as configure() returns.
+     */
+    fun start(waitForReferrer: Boolean) {
+        val existing = store.getString(KEY_INSTALL_ID)
+        val id = existing ?: UUID.randomUUID().toString().also { store.putString(KEY_INSTALL_ID, it) }
+        publicInstallId = id
+        scheduler.execute { startOnQueue(waitForReferrer, id, firstLaunch = existing == null) }
+    }
+
+    private fun startOnQueue(waitForReferrer: Boolean, id: String, firstLaunch: Boolean) {
         optedOut = store.getBoolean(KEY_OPTED_OUT)
         queue.addAll(queueStore.load().takeLast(MAX_QUEUE))
-        registered = store.getBoolean(KEY_REGISTERED)
-        installId = store.getString(KEY_INSTALL_ID)
-        if (installId == null) {
-            installId = UUID.randomUUID().toString()
-            store.putString(KEY_INSTALL_ID, installId)
-            registered = false
-            enqueue("first_open", null, null)
-        }
-        publicInstallId = installId
+        registered = !firstLaunch && store.getBoolean(KEY_REGISTERED)
+        installId = id
+        if (firstLaunch) enqueue("first_open", null, null)
         if (optedOut) {
             log.info("Tracking is off for this install (setEnabled(false)).")
-            return@execute
+            return
         }
         enqueue("session_start", null, null)
 

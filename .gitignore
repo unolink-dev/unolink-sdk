@@ -13,3 +13,5 @@ xcuserdata/
 Pods/
 node_modules/
 .dart_tool/
+ios/Examples/Secrets.xcconfig
+ios/Examples/*.xcodeproj/

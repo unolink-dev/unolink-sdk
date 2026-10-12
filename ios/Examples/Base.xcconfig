@@ -1,0 +1,4 @@
+// Your SDK key goes in Secrets.xcconfig next to this file (not committed):
+//   UNOLINK_KEY = ulk_…
+UNOLINK_KEY =
+#include? "Secrets.xcconfig"

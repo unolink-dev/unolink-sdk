@@ -250,6 +250,23 @@ class EngineTest {
     }
 
     @Test
+    fun install_id_is_available_as_soon_as_start_returns() {
+        val h = Harness()
+        val engine = Engine(
+            device = dev.unolink.internal.DeviceInfo("android", "android", "0.1.0", null, null, null, null, false),
+            transport = h.server, store = h.store, queueStore = h.queue,
+            scheduler = object : dev.unolink.internal.Scheduler {
+                override fun execute(task: () -> Unit) {}
+                override fun schedule(delayMillis: Long, task: () -> Unit) {}
+            },
+            clock = h.clock, log = h.log, runOnMain = { it() },
+        )
+        engine.start(waitForReferrer = true)
+        assertTrue(engine.publicInstallId != null)
+        assertTrue(h.server.requests.isEmpty())
+    }
+
+    @Test
     fun install_id_is_random_stable_and_not_resent_after_registration() {
         val h = Harness()
         h.engine.start(waitForReferrer = false)

@@ -46,3 +46,23 @@ jobs:
         with:
           name: android-reports
           path: android/unolink/build/reports
+
+  ios:
+    name: iOS SDK (tests on macOS + simulator, Swift and Objective-C samples)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit + contract-schema tests (macOS)
+        run: swift test
+      - name: Tests on the iOS simulator
+        run: |
+          set -o pipefail
+          DEST=$(xcodebuild -scheme Unolink -showdestinations 2>/dev/null | grep "platform:iOS Simulator" | grep -m1 -E "name:iPhone" | sed -E 's/.*id:([^,]+),.*/\1/')
+          xcodebuild test -scheme Unolink -destination "id=$DEST" -quiet
+      - name: Build the SwiftUI and Objective-C samples
+        run: |
+          brew install xcodegen
+          cd ios/Examples && xcodegen
+          for t in SwiftUISample ObjCSample; do
+            xcodebuild -project UnolinkExamples.xcodeproj -scheme $t -destination "generic/platform=iOS Simulator" CODE_SIGNING_ALLOWED=NO -quiet build
+          done

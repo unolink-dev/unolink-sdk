@@ -5,8 +5,8 @@ views, trials and purchases, and send people who install from a link straight to
 
 | Platform | Status | Install |
 |---|---|---|
-| Android (Kotlin, Java) | In development | `dev.unolink:unolink-android` (Maven Central) |
-| iOS (Swift, Objective-C) | In development | Swift Package Manager: `https://github.com/unolink-dev/unolink-sdk` |
+| Android (Kotlin, Java) | 0.1.0, beta (not yet on Maven Central) | `dev.unolink:unolink-android` |
+| iOS (Swift, Objective-C) | 0.1.0, beta | Swift Package Manager: `https://github.com/unolink-dev/unolink-sdk` |
 | React Native | Planned | `@unolink/react-native` |
 | Flutter | Planned | `unolink` (pub.dev) |
 
