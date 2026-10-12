@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    name: Contract files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Every schema, scenario and canned response is valid JSON; every schema is valid draft 2020-12
+        run: |
+          pip install --quiet "jsonschema>=4.23"
+          python - <<'PY'
+          import glob, json
+          from jsonschema import Draft202012Validator
+          for f in sorted(glob.glob("contract/**/*.json", recursive=True)):
+              data = json.load(open(f))
+              if f.startswith("contract/schemas/"):
+                  Draft202012Validator.check_schema(data)
+          print("contract OK")
+          PY
+
+  android:
+    name: Android SDK (tests, lint, samples)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew --no-daemon :unolink:testDebugUnitTest :unolink:lintDebug :samples:kotlin:assembleDebug :samples:java:assembleDebug
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-reports
+          path: android/unolink/build/reports
