@@ -3,30 +3,110 @@
   "$id": "https://unolink.dev/schemas/v1/install-request.json",
   "title": "POST /v1/install request",
   "type": "object",
-  "required": ["installId", "platform", "sdk"],
+  "required": [
+    "installId",
+    "platform",
+    "sdk"
+  ],
   "properties": {
-    "installId": { "type": "string", "format": "uuid" },
-    "platform": { "enum": ["android", "ios"] },
+    "installId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "platform": {
+      "enum": [
+        "android",
+        "ios"
+      ]
+    },
     "sdk": {
       "type": "object",
-      "required": ["name", "version"],
+      "required": [
+        "name",
+        "version"
+      ],
       "properties": {
-        "name": { "enum": ["android", "ios", "react-native", "flutter"] },
-        "version": { "type": "string", "minLength": 1, "maxLength": 16 }
+        "name": {
+          "enum": [
+            "android",
+            "ios",
+            "react-native",
+            "flutter"
+          ]
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        }
       }
     },
-    "osVersion": { "type": ["string", "null"], "maxLength": 32 },
-    "appVersion": { "type": ["string", "null"], "maxLength": 32 },
-    "deviceClass": { "enum": ["phone", "tablet", null] },
-    "locale": { "type": ["string", "null"], "maxLength": 35 },
-    "isDebug": { "type": "boolean" },
+    "osVersion": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 32
+    },
+    "appVersion": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 32
+    },
+    "deviceClass": {
+      "enum": [
+        "phone",
+        "tablet",
+        null
+      ]
+    },
+    "locale": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 35
+    },
+    "isDebug": {
+      "type": "boolean"
+    },
     "playReferrer": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "properties": {
-        "raw": { "type": ["string", "null"], "maxLength": 4096 },
-        "clickAt": { "type": ["integer", "null"] },
-        "installBeginAt": { "type": ["integer", "null"] }
+        "raw": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4096
+        },
+        "clickAt": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "installBeginAt": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
       }
+    },
+    "userId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 256,
+      "description": "The app's own user ID (e.g. RevenueCat app user ID). Stored only as a per-app HMAC."
     }
   }
 }

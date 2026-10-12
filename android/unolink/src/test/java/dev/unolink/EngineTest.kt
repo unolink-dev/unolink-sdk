@@ -265,6 +265,26 @@ class EngineTest {
     }
 
     @Test
+    fun user_id_travels_with_install_and_batches_and_can_be_cleared() {
+        val h = Harness()
+        h.engine.setUserId("user-123")
+        h.engine.start(waitForReferrer = false)
+        assertEquals("user-123", h.server.requests[0].json.getString("userId"))
+        Contract.assertValid("install-request", h.server.requests[0].body!!)
+
+        h.engine.track("sign_up", null, null)
+        h.engine.flushNow()
+        val batch = h.server.requests.last()
+        assertEquals("user-123", batch.json.getString("userId"))
+        Contract.assertValid("events-request", batch.body!!)
+
+        h.engine.setUserId(null)
+        h.engine.track("a", null, null)
+        h.engine.flushNow()
+        assertTrue(!h.server.requests.last().json.has("userId"))
+    }
+
+    @Test
     fun server_errors_are_retried_not_dropped() {
         val h = Harness()
         h.engine.start(waitForReferrer = false)

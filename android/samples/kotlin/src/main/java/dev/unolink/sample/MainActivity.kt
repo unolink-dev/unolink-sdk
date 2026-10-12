@@ -28,10 +28,12 @@ class MainActivity : Activity() {
         }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
         button("Onboarding completed") { Unolink.onboardingCompleted(mapOf("steps" to 4)) }
-        button("Paywall viewed") { Unolink.paywallViewed(mapOf("paywall" to "main")) }
-        button("Paywall skipped") { Unolink.paywallSkipped() }
+        button("Paywall viewed (onboarding)") { Unolink.paywallViewed(placement = "onboarding") }
+        button("Paywall skipped") { Unolink.paywallSkipped(placement = "onboarding") }
+        button("Sign up (set user ID)") { Unolink.setUserId("sample-user-1"); Unolink.signUp(method = "email") }
         button("Trial started") { Unolink.trialStarted(productId = "pro_yearly") }
         button("Purchase 4.99 USD") { Unolink.purchase(BigDecimal("4.99"), "USD", productId = "pro_monthly") }
+        button("Purchase cancelled") { Unolink.purchaseCancelled(productId = "pro_monthly") }
         button("Custom event: level_up") { Unolink.track("level_up", mapOf("level" to 3)) }
         button("Send now (flush)") { Unolink.flush() }
 

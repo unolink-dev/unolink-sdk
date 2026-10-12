@@ -111,25 +111,59 @@ public object Unolink {
         withEngine { it.track(name, properties, null) }
     }
 
-    /** The user finished onboarding. */
+    /** The user finished the onboarding screens (send it before any paywall or sign-up that follows them). */
     @JvmStatic
     @JvmOverloads
     public fun onboardingCompleted(properties: Map<String, Any?>? = null) {
         withEngine { it.track("onboarding_completed", properties, null) }
     }
 
-    /** A paywall was shown. */
+    /**
+     * A paywall was shown. [placement] says where, so the funnel can tell them apart: "onboarding", "feature_gate", or
+     * your own name.
+     */
     @JvmStatic
     @JvmOverloads
-    public fun paywallViewed(properties: Map<String, Any?>? = null) {
-        withEngine { it.track("paywall_viewed", properties, null) }
+    public fun paywallViewed(placement: String? = null, properties: Map<String, Any?>? = null) {
+        withEngine { it.track("paywall_viewed", withValue("placement", placement, properties), null) }
     }
 
     /** The user closed a paywall without buying. */
     @JvmStatic
     @JvmOverloads
-    public fun paywallSkipped(properties: Map<String, Any?>? = null) {
-        withEngine { it.track("paywall_skipped", properties, null) }
+    public fun paywallSkipped(placement: String? = null, properties: Map<String, Any?>? = null) {
+        withEngine { it.track("paywall_skipped", withValue("placement", placement, properties), null) }
+    }
+
+    /** An account was created (in many apps this comes after the paywall). */
+    @JvmStatic
+    @JvmOverloads
+    public fun signUp(method: String? = null, properties: Map<String, Any?>? = null) {
+        withEngine { it.track("sign_up", withValue("method", method, properties), null) }
+    }
+
+    /** The user closed the store's purchase sheet without paying. */
+    @JvmStatic
+    @JvmOverloads
+    public fun purchaseCancelled(productId: String? = null, properties: Map<String, Any?>? = null) {
+        withEngine { it.track("purchase_cancelled", withProduct(productId, properties), null) }
+    }
+
+    /** The purchase failed (payment declined, store error). [reason] is your own short description. */
+    @JvmStatic
+    @JvmOverloads
+    public fun purchaseFailed(productId: String? = null, reason: String? = null, properties: Map<String, Any?>? = null) {
+        withEngine { it.track("purchase_failed", withValue("reason", reason, withProduct(productId, properties)), null) }
+    }
+
+    /**
+     * Your app's own ID for the signed-in (or anonymous) user, e.g. the RevenueCat app user ID. It lets Unolink join
+     * server-side purchase data (renewals, cancellations, refunds) to the link the install came from. Unolink stores only
+     * a keyed hash of it, never the ID itself. Pass null on sign-out.
+     */
+    @JvmStatic
+    public fun setUserId(userId: String?) {
+        withEngine { it.setUserId(userId) }
     }
 
     /** A free trial started. */
@@ -184,7 +218,10 @@ public object Unolink {
     }
 
     private fun withProduct(productId: String?, properties: Map<String, Any?>?): Map<String, Any?>? =
-        if (productId == null) properties else (properties.orEmpty() + ("product_id" to productId))
+        withValue("product_id", productId, properties)
+
+    private fun withValue(key: String, value: String?, properties: Map<String, Any?>?): Map<String, Any?>? =
+        if (value == null) properties else (properties.orEmpty() + (key to value))
 
     private inline fun withEngine(block: (Engine) -> Unit) {
         val e = engine

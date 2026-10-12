@@ -50,6 +50,14 @@ already-stored IDs count as duplicates.
 - `409` with `install_required`: the server doesn't know this `installId`. Send `/v1/install` again, then the batch.
 - Timestamps more than 7 days old or more than 1 hour ahead are replaced with the time the server received them.
 
+### User ID (optional)
+
+`userId` on `/v1/install` or `/v1/events` tells Unolink the app's own user ID for this install, e.g. the RevenueCat
+app user ID. It lets server-side purchase data (RevenueCat webhooks: renewals, cancellations, refunds) join the
+install that came from a link. **Unolink never stores it**: the server keeps only an HMAC-SHA256 of it under a
+per-app secret, and hashes webhook IDs the same way to match. Send it once known (and again if it changes); `null`
+or absent leaves the stored value unchanged.
+
 ### `GET /v1/clicks/{clickId}`
 
 Looks up a click ID from the Play referrer: its link, deep link, params and UTM tags.
@@ -64,9 +72,17 @@ most 200 characters), numbers or booleans; 4 KB in total.
 | `first_open` | SDK, once per install | no |
 | `session_start` | SDK, on launch or after 30 minutes in the background | no |
 | `app_background` | SDK | no |
-| `onboarding_completed`, `paywall_viewed`, `paywall_skipped`, `trial_started` | app | yes |
+| `onboarding_completed` | app: the user finished the onboarding questions/screens (before any paywall or sign-up that follows them) | yes |
+| `paywall_viewed`, `paywall_skipped` | app; property `placement` says where: `onboarding`, `feature_gate`, or the app's own name | yes |
+| `sign_up` | app: an account was created (often after the paywall) | yes |
+| `trial_started` | app | yes |
 | `purchase` | app; **must** carry `revenue: { amount: "49.99", currency: "USD" }` | yes |
+| `purchase_cancelled`, `purchase_failed` | app: the user closed the store sheet / the payment failed | yes |
 | anything else | app (`track`) | yes |
+
+Funnel steps are per app and configurable in the dashboard (any of these names, custom ones included), so apps whose
+screens come in a different order still get a meaningful funnel. Each step counts installs that sent the event at any
+time: the order never affects whether data is collected.
 
 `revenue.amount` is a decimal **string**, never a float, so prices don't round. Only `purchase` carries revenue.
 

@@ -67,8 +67,9 @@ internal object Payloads {
             if (revenue != null) put("revenue", JSONObject().put("amount", revenue.first).put("currency", revenue.second.uppercase(Locale.US)))
         }
 
-    fun install(installId: String, device: DeviceInfo, referrer: ReferrerDetails?): String = JSONObject().apply {
+    fun install(installId: String, device: DeviceInfo, referrer: ReferrerDetails?, userId: String?): String = JSONObject().apply {
         put("installId", installId)
+        userId?.let { put("userId", it) }
         put("platform", device.platform)
         put("sdk", JSONObject().put("name", device.sdkName).put("version", device.sdkVersion))
         device.osVersion?.let { put("osVersion", it.take(32)) }
@@ -85,8 +86,10 @@ internal object Payloads {
         }
     }.toString()
 
-    fun events(installId: String, events: List<String>): String =
-        "{\"installId\":${JSONObject.quote(installId)},\"events\":[${events.joinToString(",")}]}"
+    fun events(installId: String, events: List<String>, userId: String?): String =
+        "{\"installId\":${JSONObject.quote(installId)}," +
+            (if (userId != null) "\"userId\":${JSONObject.quote(userId)}," else "") +
+            "\"events\":[${events.joinToString(",")}]}"
 
     /** The deferred deep link from an /v1/install response, when the install was attributed to a link. */
     fun deepLinkFromInstall(body: String?): UnolinkDeepLink? {

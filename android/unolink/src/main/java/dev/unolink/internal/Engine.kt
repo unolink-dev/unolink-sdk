@@ -40,6 +40,8 @@ internal class Engine(
         const val KEY_REGISTERED = "install_registered"
         const val KEY_OPTED_OUT = "opted_out"
         const val KEY_DEEP_LINK_DONE = "deep_link_done"
+        const val KEY_USER_ID = "user_id"
+        const val MAX_USER_ID = 256
     }
 
     private val queue = ArrayDeque<String>()
@@ -121,6 +123,16 @@ internal class Engine(
 
     fun flushNow() = scheduler.execute { flush() }
 
+    /** The app's own user ID (e.g. RevenueCat app user ID). Unolink stores only a keyed hash of it. Null clears it. */
+    fun setUserId(userId: String?) = scheduler.execute {
+        val clean = userId?.trim()?.takeIf { it.isNotEmpty() }
+        if (clean != null && clean.length > MAX_USER_ID) {
+            log.error("setUserId(): at most $MAX_USER_ID characters; ignored.")
+            return@execute
+        }
+        store.putString(KEY_USER_ID, clean)
+    }
+
     fun setEnabled(enabled: Boolean) = scheduler.execute {
         optedOut = !enabled
         store.putBoolean(KEY_OPTED_OUT, optedOut)
@@ -177,7 +189,7 @@ internal class Engine(
         val id = installId ?: return
         if (stopped || optedOut || inFlight || registered || !referrerSettled) return
         inFlight = true
-        val response = call("POST", "/v1/install", Payloads.install(id, device, referrer))
+        val response = call("POST", "/v1/install", Payloads.install(id, device, referrer, store.getString(KEY_USER_ID)))
         inFlight = false
         when {
             response == null -> scheduleRetry()
@@ -201,7 +213,7 @@ internal class Engine(
         if (queue.isEmpty()) return
         val batch = queue.take(BATCH_SIZE)
         inFlight = true
-        val response = call("POST", "/v1/events", Payloads.events(installId!!, batch))
+        val response = call("POST", "/v1/events", Payloads.events(installId!!, batch, store.getString(KEY_USER_ID)))
         inFlight = false
         when {
             response == null -> scheduleRetry()

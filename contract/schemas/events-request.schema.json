@@ -3,39 +3,108 @@
   "$id": "https://unolink.dev/schemas/v1/events-request.json",
   "title": "POST /v1/events request",
   "type": "object",
-  "required": ["installId", "events"],
+  "required": [
+    "installId",
+    "events"
+  ],
   "properties": {
-    "installId": { "type": "string", "format": "uuid" },
+    "installId": {
+      "type": "string",
+      "format": "uuid"
+    },
     "events": {
       "type": "array",
       "minItems": 1,
       "maxItems": 100,
       "items": {
         "type": "object",
-        "required": ["id", "name", "timestamp"],
+        "required": [
+          "id",
+          "name",
+          "timestamp"
+        ],
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.]{0,63}$" },
-          "timestamp": { "type": "string", "format": "date-time" },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_.]{0,63}$"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
           "properties": {
-            "type": ["object", "null"],
+            "type": [
+              "object",
+              "null"
+            ],
             "maxProperties": 20,
             "additionalProperties": {
-              "anyOf": [{ "type": "string", "maxLength": 200 }, { "type": "number" }, { "type": "boolean" }]
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             }
           },
           "revenue": {
-            "type": ["object", "null"],
-            "required": ["amount", "currency"],
+            "type": [
+              "object",
+              "null"
+            ],
+            "required": [
+              "amount",
+              "currency"
+            ],
             "properties": {
-              "amount": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]{1,6})?$" },
-              "currency": { "type": "string", "pattern": "^[A-Za-z]{3}$" }
+              "amount": {
+                "type": "string",
+                "pattern": "^[0-9]+(\\.[0-9]{1,6})?$"
+              },
+              "currency": {
+                "type": "string",
+                "pattern": "^[A-Za-z]{3}$"
+              }
             }
           }
         },
-        "if": { "properties": { "name": { "const": "purchase" } } },
-        "then": { "required": ["revenue"], "properties": { "revenue": { "type": "object" } } }
+        "if": {
+          "properties": {
+            "name": {
+              "const": "purchase"
+            }
+          }
+        },
+        "then": {
+          "required": [
+            "revenue"
+          ],
+          "properties": {
+            "revenue": {
+              "type": "object"
+            }
+          }
+        }
       }
+    },
+    "userId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 256,
+      "description": "The app's own user ID (e.g. RevenueCat app user ID). Stored only as a per-app HMAC."
     }
   }
 }

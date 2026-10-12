@@ -30,7 +30,14 @@ public class MainActivity extends Activity {
         Unolink.track("level_up", properties);
         Unolink.onboardingCompleted();
         Unolink.paywallViewed();
-        Unolink.paywallSkipped(properties);
+        Unolink.paywallViewed("onboarding");
+        Unolink.paywallSkipped("feature_gate", properties);
+        Unolink.signUp();
+        Unolink.signUp("apple");
+        Unolink.purchaseCancelled("pro_yearly");
+        Unolink.purchaseFailed("pro_yearly", "card_declined");
+        Unolink.setUserId("supabase-user-uuid");
+        Unolink.setUserId(null);
         Unolink.trialStarted();
         Unolink.trialStarted("pro_yearly");
         Unolink.purchase(new BigDecimal("4.99"), "USD");

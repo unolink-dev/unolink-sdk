@@ -1,0 +1,68 @@
+{
+  "name": "user_id_and_new_events",
+  "description": "An install can carry the app's user ID (stored only as a hash); events can set it later. Neither response echoes it.",
+  "setup": {
+    "plan": "pro",
+    "key": "valid"
+  },
+  "steps": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/v1/install",
+        "body": {
+          "installId": "${uuid:install}",
+          "platform": "ios",
+          "sdk": {
+            "name": "ios",
+            "version": "1.0.0"
+          },
+          "userId": "user-123"
+        }
+      },
+      "expect": {
+        "status": 200,
+        "schema": "install-response"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/v1/events",
+        "body": {
+          "installId": "${uuid:install}",
+          "userId": "user-456",
+          "events": [
+            {
+              "id": "${uuid:e1}",
+              "name": "sign_up",
+              "timestamp": "${now}"
+            },
+            {
+              "id": "${uuid:e2}",
+              "name": "paywall_viewed",
+              "timestamp": "${now}",
+              "properties": {
+                "placement": "onboarding"
+              }
+            },
+            {
+              "id": "${uuid:e3}",
+              "name": "purchase_cancelled",
+              "timestamp": "${now}"
+            }
+          ]
+        }
+      },
+      "expect": {
+        "status": 202,
+        "schema": "events-response",
+        "body": {
+          "accepted": 3,
+          "duplicates": 0,
+          "rejected": []
+        }
+      }
+    }
+  ]
+}
