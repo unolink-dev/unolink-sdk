@@ -57,8 +57,14 @@ jobs:
       - name: Tests on the iOS simulator
         run: |
           set -o pipefail
-          DEST=$(xcodebuild -scheme Unolink -showdestinations 2>/dev/null | grep "platform:iOS Simulator" | grep -m1 -E "name:iPhone" | sed -E 's/.*id:([^,]+),.*/\1/')
-          xcodebuild test -scheme Unolink -destination "id=$DEST" -quiet
+          # Newest available iPhone simulator, from simctl's JSON (sturdier than parsing xcodebuild's text).
+          DEST=$(xcrun simctl list devices available -j | python3 -c "import sys,json; d=json.load(sys.stdin)['devices']; rts=sorted([r for r in d if 'iOS' in r], key=lambda r: [int(x) for x in r.split('iOS-')[-1].split('-')]); print(next(x['udid'] for r in reversed(rts) for x in d[r] if x['name'].startswith('iPhone')))")
+          echo "::notice::iOS simulator $DEST"
+          xcodebuild test -scheme Unolink -destination "id=$DEST" 2>&1 | tee xcodebuild.log | grep -E "Executed|error:|failed" || true
+          if ! grep -q "TEST SUCCEEDED" xcodebuild.log; then
+            grep -E "error:|failed|Unable" xcodebuild.log | head -20 | while read -r line; do echo "::error::$line"; done
+            exit 1
+          fi
       - name: Build the SwiftUI and Objective-C samples
         run: |
           brew install xcodegen
