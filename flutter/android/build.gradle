@@ -1,0 +1,54 @@
+// Flutter plugin for Unolink. Compiles the bridge together with the Unolink Android SDK's Kotlin sources
+// (src/main/kotlin/dev/unolink/core, copied in by tool/sync_native.sh) until the SDK is on Maven Central.
+group = "dev.unolink.flutter"
+version = "0.1.0"
+
+buildscript {
+    ext.kotlin_version = "2.1.20"
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.7.3")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: "com.android.library"
+apply plugin: "kotlin-android"
+
+android {
+    namespace = "dev.unolink.flutter"
+    compileSdk = 36
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    sourceSets {
+        main.java.srcDirs += "src/main/kotlin"
+    }
+
+    defaultConfig {
+        minSdk = 23
+        consumerProguardFiles "proguard-rules.pro"
+    }
+}
+
+dependencies {
+    implementation "com.android.installreferrer:installreferrer:2.2"
+    implementation "androidx.lifecycle:lifecycle-process:2.8.7"
+}

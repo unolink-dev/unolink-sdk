@@ -1,0 +1,22 @@
+PODS:
+  - Flutter (1.0.0)
+  - unolink (0.1.0):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - unolink (from `.symlinks/plugins/unolink/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  unolink:
+    :path: ".symlinks/plugins/unolink/ios"
+
+SPEC CHECKSUMS:
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
+  unolink: 558cc8ca6dfd56fae6489589502931bc201fd2e7
+
+PODFILE CHECKSUM: 3ba3a73b1b12adcf321a227a745625fe0888cc82
+
+COCOAPODS: 1.16.2

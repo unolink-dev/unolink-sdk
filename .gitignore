@@ -19,3 +19,16 @@ react-native/ios/UnolinkCore/
 react-native/android/src/main/java/dev/unolink/core/
 react-native/node_modules/
 *.tgz
+flutter/ios/UnolinkCore/
+flutter/android/src/main/kotlin/dev/unolink/core/
+flutter/.dart_tool/
+flutter/build/
+flutter/example/build/
+flutter/example/.dart_tool/
+flutter/example/ios/Pods/
+flutter/example/ios/Flutter/ephemeral/
+flutter/example/ios/Flutter/Generated.xcconfig
+flutter/example/ios/Flutter/flutter_export_environment.sh
+flutter/example/android/.gradle/
+flutter/example/android/local.properties
+flutter/pubspec.lock

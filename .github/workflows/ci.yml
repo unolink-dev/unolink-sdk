@@ -95,3 +95,24 @@ jobs:
           npm pack --silent
           tar -tzf unolink-react-native-*.tgz | grep -q "ios/UnolinkCore/Unolink.swift"
           tar -tzf unolink-react-native-*.tgz | grep -q "android/src/main/java/dev/unolink/core/Unolink.kt"
+
+  flutter:
+    name: Flutter plugin (analyze, Android build of the example)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Copy the native SDK cores into the plugin
+        run: flutter/tool/sync_native.sh
+      - name: Analyze
+        working-directory: flutter
+        run: flutter pub get && flutter analyze
+      - name: Build the example for Android
+        working-directory: flutter/example
+        run: flutter pub get && flutter analyze && flutter build apk --debug

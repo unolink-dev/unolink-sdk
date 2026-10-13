@@ -8,7 +8,7 @@ views, trials and purchases, and send people who install from a link straight to
 | Android (Kotlin, Java) | 0.1.0, beta (not yet on Maven Central) | `dev.unolink:unolink-android` |
 | iOS (Swift, Objective-C) | 0.1.0, beta | Swift Package Manager: `https://github.com/unolink-dev/unolink-sdk` |
 | React Native / Expo | 0.1.0, beta (not yet on npm) | `@unolink/react-native` |
-| Flutter | Planned | `unolink` (pub.dev) |
+| Flutter | 0.1.0, beta (not yet on pub.dev) | `unolink` |
 
 ## What the SDK collects
 
@@ -28,6 +28,8 @@ fingerprints devices. Country comes from Cloudflare at the edge; IP addresses ar
 contract/   The SDK API contract: plain-language spec, OpenAPI, JSON Schemas, test scenarios
 android/    Android SDK (Kotlin) + Kotlin and Java sample apps
 ios/        iOS SDK (Swift) + SwiftUI and Objective-C samples
+react-native/  React Native / Expo bridge (@unolink/react-native)
+flutter/    Flutter plugin (unolink) + example app
 ```
 
 Docs: <https://unolink.dev/docs>. Licence: MIT.
