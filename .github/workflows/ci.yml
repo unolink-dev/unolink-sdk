@@ -72,3 +72,26 @@ jobs:
           for t in SwiftUISample ObjCSample; do
             xcodebuild -project UnolinkExamples.xcodeproj -scheme $t -destination "generic/platform=iOS Simulator" CODE_SIGNING_ALLOWED=NO -quiet build
           done
+
+  react-native:
+    name: React Native package (types, codegen, pack)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: react-native
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run typecheck
+      - name: React Native codegen accepts the module spec (iOS and Android)
+        run: |
+          node node_modules/react-native/scripts/generate-codegen-artifacts.js -p . -o "$RUNNER_TEMP/codegen" -t ios
+          node node_modules/react-native/scripts/generate-codegen-artifacts.js -p . -o "$RUNNER_TEMP/codegen" -t android
+      - name: The packed package carries both native SDK cores
+        run: |
+          npm pack --silent
+          tar -tzf unolink-react-native-*.tgz | grep -q "ios/UnolinkCore/Unolink.swift"
+          tar -tzf unolink-react-native-*.tgz | grep -q "android/src/main/java/dev/unolink/core/Unolink.kt"

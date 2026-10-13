@@ -1,0 +1,52 @@
+{
+  "name": "@unolink/react-native",
+  "version": "0.1.0",
+  "description": "Unolink for React Native and Expo: which link or ad brings installs, onboarding, paywall views, trials and purchases.",
+  "license": "MIT",
+  "author": "Marin Capranov (Unolink)",
+  "homepage": "https://unolink.dev/docs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unolink-dev/unolink-sdk.git",
+    "directory": "react-native"
+  },
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "react-native": "src/index.ts",
+  "source": "src/index.ts",
+  "files": [
+    "src",
+    "ios",
+    "android/build.gradle",
+    "android/proguard-rules.pro",
+    "android/src",
+    "UnolinkReactNative.podspec",
+    "react-native.config.js",
+    "README.md",
+    "!**/build",
+    "!**/.gradle"
+  ],
+  "scripts": {
+    "sync-native": "node scripts/sync-native.mjs",
+    "prepack": "node scripts/sync-native.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": ">=0.79.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "react": "19.1.0",
+    "react-native": "0.81.4",
+    "typescript": "^5.6.0"
+  },
+  "codegenConfig": {
+    "name": "RNUnolinkSpec",
+    "type": "modules",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "dev.unolink.reactnative"
+    }
+  }
+}

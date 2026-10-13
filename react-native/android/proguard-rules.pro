@@ -1,0 +1,6 @@
+-keep class dev.unolink.Unolink { public *; }
+-keep class dev.unolink.UnolinkOptions { public *; }
+-keep class dev.unolink.UnolinkDeepLink { public *; }
+-keep interface dev.unolink.DeferredDeepLinkListener { *; }
+-keep enum dev.unolink.LogLevel { *; }
+-keep class dev.unolink.reactnative.** { *; }

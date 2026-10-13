@@ -134,7 +134,15 @@ internal class Engine(
             log.error("setUserId(): at most $MAX_USER_ID characters; ignored.")
             return@execute
         }
+        if (clean == store.getString(KEY_USER_ID)) return@execute
         store.putString(KEY_USER_ID, clean)
+        // Tell the server now (the install request is idempotent and carries the user ID), so RevenueCat purchases
+        // join this install even if no other event follows. Persisted, so it also happens if the app is closed first.
+        if (registered) {
+            registered = false
+            store.putBoolean(KEY_REGISTERED, false)
+            flush()
+        }
     }
 
     fun setEnabled(enabled: Boolean) = scheduler.execute {

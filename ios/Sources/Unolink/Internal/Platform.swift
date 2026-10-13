@@ -148,6 +148,11 @@ final class Lifecycle {
 
     init(engine: Engine) {
         #if canImport(UIKit) && !os(watchOS)
+        // configure() often runs after the app is already active (React Native and Flutter call it from their own
+        // code a moment after launch), so the first didBecomeActive is missed: catch up with the current state.
+        DispatchQueue.main.async {
+            if UIApplication.shared.applicationState == .active { engine.onForeground() }
+        }
         let center = NotificationCenter.default
         tokens.append(center.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: nil) { _ in
             engine.onForeground()

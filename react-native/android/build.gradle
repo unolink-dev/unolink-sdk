@@ -1,0 +1,46 @@
+// React Native bridge to the Unolink Android SDK. The SDK's Kotlin sources are compiled in (src/main/java/dev/unolink/core,
+// copied by scripts/sync-native.mjs) until it is on Maven Central.
+buildscript {
+  ext.safeExtGet = { prop, fallback -> rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback }
+}
+
+apply plugin: "com.android.library"
+apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.facebook.react"
+
+android {
+  namespace "dev.unolink.reactnative"
+  compileSdkVersion safeExtGet("compileSdkVersion", 36)
+
+  defaultConfig {
+    minSdkVersion safeExtGet("minSdkVersion", 24)
+    targetSdkVersion safeExtGet("targetSdkVersion", 36)
+    consumerProguardFiles "proguard-rules.pro"
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+}
+
+kotlin {
+  jvmToolchain(17)
+}
+
+repositories {
+  google()
+  mavenCentral()
+}
+
+dependencies {
+  implementation "com.facebook.react:react-android"
+  implementation "com.android.installreferrer:installreferrer:2.2"
+  implementation "androidx.lifecycle:lifecycle-process:2.8.7"
+}
+
+react {
+  jsRootDir = file("../src")
+  libraryName = "RNUnolinkSpec"
+  codegenJavaPackageName = "dev.unolink.reactnative"
+}

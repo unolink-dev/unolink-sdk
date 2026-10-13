@@ -212,6 +212,17 @@ final class EngineTests: XCTestCase {
         XCTAssertTrue(h.queue.lines.isEmpty)
     }
 
+    func testANewUserIdIsSentAtOnceEvenWithoutEvents() {
+        let h = Harness()
+        h.engine.start()
+        h.server.requests.removeAll()
+        h.engine.setUserId("user-9")
+        XCTAssertEqual(h.server.paths, ["/v1/install"])
+        XCTAssertEqual(h.server.requests[0].json["userId"] as? String, "user-9")
+        h.engine.setUserId("user-9")
+        XCTAssertEqual(h.server.requests.count, 1)
+    }
+
     func testUserIdCanBeCleared() {
         let h = Harness()
         h.engine.setUserId("u1")

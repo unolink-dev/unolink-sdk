@@ -118,7 +118,16 @@ final class Engine {
                 log.error("setUserId(): at most \(Self.maxUserId) characters; ignored.")
                 return
             }
-            store.set(Self.keyUserId, clean?.isEmpty == false ? clean : nil)
+            let value = clean?.isEmpty == false ? clean : nil
+            guard value != store.string(Self.keyUserId) else { return }
+            store.set(Self.keyUserId, value)
+            // Tell the server now (the install request is idempotent and carries the user ID), so RevenueCat purchases
+            // join this install even if no other event follows. Persisted, so it also happens if the app is closed first.
+            if registered {
+                registered = false
+                store.setBool(Self.keyRegistered, false)
+                flush()
+            }
         }
     }
 

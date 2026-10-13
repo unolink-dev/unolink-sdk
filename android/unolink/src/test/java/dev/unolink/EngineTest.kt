@@ -302,6 +302,19 @@ class EngineTest {
     }
 
     @Test
+    fun a_new_user_id_is_sent_at_once_even_without_events() {
+        val h = Harness()
+        h.engine.start(waitForReferrer = false)
+        h.server.requests.clear()
+        h.engine.setUserId("user-9")
+        assertEquals(listOf("/v1/install"), h.server.paths())
+        assertEquals("user-9", h.server.requests[0].json.getString("userId"))
+
+        h.engine.setUserId("user-9") // unchanged: nothing sent
+        assertEquals(1, h.server.requests.size)
+    }
+
+    @Test
     fun server_errors_are_retried_not_dropped() {
         val h = Harness()
         h.engine.start(waitForReferrer = false)
