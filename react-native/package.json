@@ -41,6 +41,9 @@
     "react-native": "0.81.4",
     "typescript": "^5.6.0"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "codegenConfig": {
     "name": "RNUnolinkSpec",
     "type": "modules",
