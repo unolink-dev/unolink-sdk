@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.maven.publish)
 }
 
 android {
@@ -42,4 +43,12 @@ dependencies {
 // The contract (schemas, canned responses) lives at the repo root, shared with every SDK.
 tasks.withType<Test>().configureEach {
     systemProperty("unolink.contractDir", rootProject.projectDir.resolve("../contract").canonicalPath)
+}
+
+// Maven Central: dev.unolink:unolink. Coordinates and POM details are in unolink/gradle.properties. Credentials and the
+// signing key come from ~/.gradle/gradle.properties (mavenCentralUsername, mavenCentralPassword, signingInMemoryKey,
+// signingInMemoryKeyPassword) or, in CI, ORG_GRADLE_PROJECT_* environment variables. Never commit them.
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
 }
