@@ -5,10 +5,10 @@ views, trials and purchases, and send people who install from a link straight to
 
 | Platform | Status | Install |
 |---|---|---|
-| Android (Kotlin, Java) | 0.1.0, beta (not yet on Maven Central) | `dev.unolink:unolink-android` |
+| Android (Kotlin, Java) | 0.1.0, beta | Maven Central: `dev.unolink:unolink:0.1.0` |
 | iOS (Swift, Objective-C) | 0.1.0, beta | Swift Package Manager: `https://github.com/unolink-dev/unolink-sdk` |
-| React Native / Expo | 0.1.0, beta (not yet on npm) | `@unolink/react-native` |
-| Flutter | 0.1.0, beta (not yet on pub.dev) | `unolink` |
+| React Native / Expo | 0.1.0, beta | npm: `@unolink/react-native` |
+| Flutter | 0.1.0, beta | pub.dev: `unolink` |
 
 ## What the SDK collects
 
