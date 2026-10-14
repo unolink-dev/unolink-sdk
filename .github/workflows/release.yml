@@ -1,0 +1,140 @@
+name: Release
+
+# Publishes every SDK when a version tag is pushed:
+#   1. Bump the version everywhere the "versions" job checks, commit, and wait for CI to pass.
+#   2. git tag -a vX.Y.Z -m "Unolink SDK X.Y.Z" && git push origin vX.Y.Z
+# iOS (Swift Package Manager) is the tag itself. The other registries are published below:
+#   npm      @unolink/react-native     trusted publishing (OIDC), no token
+#   pub.dev  unolink                   automated publishing (OIDC), no token
+#   Maven    dev.unolink:unolink       ORG_GRADLE_PROJECT_* repository secrets (token + signing key)
+# Each job skips a version that is already published, so re-running a failed release is safe.
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  versions:
+    name: Every version matches the tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: check
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          bad=0
+          check() {
+            if [ "$2" != "$v" ]; then echo "::error file=$1::version is '$2', the tag says $v"; bad=1; fi
+          }
+          check android/unolink/gradle.properties "$(sed -n 's/^VERSION_NAME=//p' android/unolink/gradle.properties)"
+          check android/unolink/src/main/java/dev/unolink/Unolink.kt "$(sed -n 's/.*const val VERSION: String = "\(.*\)".*/\1/p' android/unolink/src/main/java/dev/unolink/Unolink.kt)"
+          check ios/Sources/Unolink/Unolink.swift "$(sed -n 's/.*public static let version = "\(.*\)".*/\1/p' ios/Sources/Unolink/Unolink.swift)"
+          check react-native/package.json "$(node -p 'require("./react-native/package.json").version')"
+          check react-native/src/index.ts "$(sed -n 's/^export const VERSION = "\(.*\)".*/\1/p' react-native/src/index.ts)"
+          check flutter/pubspec.yaml "$(sed -n 's/^version: //p' flutter/pubspec.yaml)"
+          check flutter/lib/unolink.dart "$(sed -n "s/.*static const String version = '\(.*\)'.*/\1/p" flutter/lib/unolink.dart)"
+          check flutter/android/build.gradle "$(sed -n 's/^version = "\(.*\)".*/\1/p' flutter/android/build.gradle)"
+          check flutter/ios/unolink.podspec "$(sed -n "s/.*s.version *= *'\(.*\)'.*/\1/p" flutter/ios/unolink.podspec)"
+          [ "$bad" = 0 ] || exit 1
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "::notice::Releasing $v"
+
+  npm:
+    name: npm (@unolink/react-native)
+    needs: versions
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: react-native
+    env:
+      VERSION: ${{ needs.versions.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - name: npm 11.5.1+ (needed for trusted publishing)
+        run: npm install -g npm@latest
+      - id: published
+        run: |
+          if [ -n "$(npm view "@unolink/react-native@$VERSION" version 2>/dev/null)" ]; then
+            echo "::notice::@unolink/react-native@$VERSION is already on npm; skipping"; echo "done=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.published.outputs.done != 'true'
+        run: npm install --no-audit --no-fund && npm publish
+
+  pub:
+    name: pub.dev (unolink)
+    needs: versions
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      VERSION: ${{ needs.versions.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: published
+        run: |
+          if curl -fs "https://pub.dev/api/packages/unolink/versions/$VERSION" >/dev/null; then
+            echo "::notice::unolink $VERSION is already on pub.dev; skipping"; echo "done=true" >> "$GITHUB_OUTPUT"
+          fi
+      # setup-dart exchanges this run's GitHub OIDC token for a pub.dev credential; flutter's pub reuses it.
+      - if: steps.published.outputs.done != 'true'
+        uses: dart-lang/setup-dart@v1
+      - if: steps.published.outputs.done != 'true'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - if: steps.published.outputs.done != 'true'
+        name: Copy the native SDK cores into the plugin (published via .pubignore)
+        run: flutter/tool/sync_native.sh
+      - if: steps.published.outputs.done != 'true'
+        working-directory: flutter
+        run: flutter pub get && flutter pub publish --force
+
+  maven:
+    name: Maven Central (dev.unolink:unolink)
+    needs: versions
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    env:
+      VERSION: ${{ needs.versions.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: published
+        run: |
+          if curl -fsI "https://repo1.maven.org/maven2/dev/unolink/unolink/$VERSION/unolink-$VERSION.pom" >/dev/null; then
+            echo "::notice::dev.unolink:unolink:$VERSION is already on Maven Central; skipping"; echo "done=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.published.outputs.done != 'true'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - if: steps.published.outputs.done != 'true'
+        uses: gradle/actions/setup-gradle@v4
+      - if: steps.published.outputs.done != 'true'
+        name: Upload, sign and release
+        run: ./gradlew --no-daemon --no-configuration-cache :unolink:publishAndReleaseToMavenCentral
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.ORG_GRADLE_PROJECT_MAVENCENTRALUSERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.ORG_GRADLE_PROJECT_MAVENCENTRALPASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGINMEMORYKEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGINMEMORYKEYID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGINMEMORYKEYPASSWORD }}
