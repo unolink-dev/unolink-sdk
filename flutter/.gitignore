@@ -1,0 +1,14 @@
+# Native SDK cores are copied in by tool/sync_native.sh (not committed, but published: see .pubignore).
+ios/UnolinkCore/
+android/src/main/kotlin/dev/unolink/core/
+.dart_tool/
+build/
+example/build/
+example/.dart_tool/
+example/ios/Pods/
+example/ios/Flutter/ephemeral/
+example/ios/Flutter/Generated.xcconfig
+example/ios/Flutter/flutter_export_environment.sh
+example/android/.gradle/
+example/android/local.properties
+/pubspec.lock
