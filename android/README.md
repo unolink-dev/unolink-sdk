@@ -5,7 +5,7 @@ Kotlin, callable from Java. minSdk 23. Dependencies: Google's Play Install Refer
 
 ```kotlin
 // build.gradle.kts
-implementation("dev.unolink:unolink:0.1.0")
+implementation("dev.unolink:unolink:0.1.1")
 ```
 
 ```kotlin

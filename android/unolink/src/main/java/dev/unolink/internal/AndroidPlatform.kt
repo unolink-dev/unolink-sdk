@@ -5,6 +5,7 @@ import android.content.pm.ApplicationInfo
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
@@ -125,9 +126,15 @@ internal object AndroidDevice {
             appVersion = appVersion,
             deviceClass = if (tablet) "tablet" else "phone",
             locale = Locale.getDefault().toLanguageTag(),
-            isDebug = debug ?: debuggable,
+            // Google's test phones (Play pre-launch reports run on Firebase Test Lab) tap every button of every new
+            // upload; they are never real users, so they're always test devices, whatever `debug` says.
+            isDebug = (debug ?: debuggable) || isTestLab(context),
         )
     }
+
+    /** Firebase Test Lab (and so Google Play's pre-launch report) sets this system setting on its devices. */
+    fun isTestLab(context: Context): Boolean =
+        runCatching { Settings.System.getString(context.contentResolver, "firebase.test.lab") == "true" }.getOrDefault(false)
 
     fun isDebuggable(context: Context) = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
 }

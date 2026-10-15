@@ -30,7 +30,7 @@ class MainActivity : Activity() {
         button("Onboarding completed") { Unolink.onboardingCompleted(mapOf("steps" to 4)) }
         button("Paywall viewed (onboarding)") { Unolink.paywallViewed(placement = "onboarding") }
         button("Paywall skipped") { Unolink.paywallSkipped(placement = "onboarding") }
-        button("Sign up (set user ID)") { Unolink.setUserId("sample-user-1"); Unolink.signUp(method = "email") }
+        button("Sign up (set user ID)") { Unolink.setUserId(sampleUserId()); Unolink.signUp(method = "email") }
         button("Trial started") { Unolink.trialStarted(productId = "pro_yearly") }
         button("Purchase 4.99 USD") { Unolink.purchase(BigDecimal("4.99"), "USD", productId = "pro_monthly") }
         button("Purchase cancelled") { Unolink.purchaseCancelled(productId = "pro_monthly") }
@@ -53,6 +53,14 @@ class MainActivity : Activity() {
             appendLine("Install ID: ${Unolink.getInstallId()}")
             appendLine("Deferred deep link: ${link?.let { "${it.deepLink} ${it.params} via /${it.linkSlug ?: ""}" } ?: "none"}")
             if (note != null) appendLine(note)
+        }
+    }
+
+    /** A random user ID per install, kept across launches, as a real app's account ID would be. */
+    private fun sampleUserId(): String {
+        val prefs = getSharedPreferences("sample", MODE_PRIVATE)
+        return prefs.getString("user_id", null) ?: ("sample-" + java.util.UUID.randomUUID()).also {
+            prefs.edit().putString("user_id", it).apply()
         }
     }
 }

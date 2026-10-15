@@ -2,7 +2,7 @@ import type { EventSubscription } from "react-native"
 import Native from "./NativeRNUnolink"
 
 /** This package's version (sent with every install as the SDK version). */
-export const VERSION = "0.1.0"
+export const VERSION = "0.1.1"
 
 export type LogLevel = "none" | "error" | "warn" | "info" | "debug"
 
