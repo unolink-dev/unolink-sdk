@@ -15,6 +15,9 @@ Future<void> main() async {
 }
 
 Future<void> _fireAll() async {
+  await Unolink.onboardingStep('goal', index: 0);
+  await Unolink.onboardingStep('plan', index: 1);
+  await Unolink.onboardingSkipped('notifications', index: 2);
   await Unolink.onboardingCompleted({'steps': 4});
   await Unolink.paywallViewed(placement: 'onboarding');
   await Unolink.paywallSkipped(placement: 'onboarding');
@@ -66,6 +69,9 @@ class _SampleAppState extends State<SampleApp> {
           ListTile(title: const Text('Deferred deep link'), subtitle: Text(_deepLink)),
           if (_note.isNotEmpty) ListTile(subtitle: Text(_note)),
           const Divider(),
+          _button('Onboarding screen: goal (0)', () => Unolink.onboardingStep('goal', index: 0)),
+          _button('Onboarding screen: plan (1)', () => Unolink.onboardingStep('plan', index: 1)),
+          _button('Skip onboarding screen: notifications (2)', () => Unolink.onboardingSkipped('notifications', index: 2)),
           _button('Onboarding completed', () => Unolink.onboardingCompleted({'steps': 4})),
           _button('Paywall viewed (onboarding)', () => Unolink.paywallViewed(placement: 'onboarding')),
           _button('Paywall skipped', () => Unolink.paywallSkipped(placement: 'onboarding')),

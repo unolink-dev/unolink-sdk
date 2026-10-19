@@ -239,7 +239,7 @@ public object Unolink {
         withValue("product_id", productId, properties)
 
     /** The server accepts only these three on onboarding events. */
-    private fun onboarding(step: String, index: Int?, flow: String?): Map<String, Any?> =
+    internal fun onboarding(step: String, index: Int?, flow: String?): Map<String, Any?> =
         buildMap {
             put("step", step)
             if (index != null) put("index", index)

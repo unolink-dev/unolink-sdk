@@ -74,7 +74,7 @@ jobs:
           done
 
   react-native:
-    name: React Native package (types, codegen, pack)
+    name: React Native package (types, tests, codegen, pack)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -86,6 +86,7 @@ jobs:
           node-version: 22
       - run: npm install --no-audit --no-fund
       - run: npm run typecheck
+      - run: npm test
       - name: React Native codegen accepts the module spec (iOS and Android)
         run: |
           node node_modules/react-native/scripts/generate-codegen-artifacts.js -p . -o "$RUNNER_TEMP/codegen" -t ios
@@ -97,7 +98,7 @@ jobs:
           tar -tzf unolink-react-native-*.tgz | grep -q "android/src/main/java/dev/unolink/core/Unolink.kt"
 
   flutter:
-    name: Flutter plugin (analyze, Android build of the example)
+    name: Flutter plugin (analyze, tests, Android build of the example)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -110,9 +111,9 @@ jobs:
           channel: stable
       - name: Copy the native SDK cores into the plugin
         run: flutter/tool/sync_native.sh
-      - name: Analyze
+      - name: Analyze and test
         working-directory: flutter
-        run: flutter pub get && flutter analyze
+        run: flutter pub get && flutter analyze && flutter test
       - name: Build the example for Android
         working-directory: flutter/example
         run: flutter pub get && flutter analyze && flutter build apk --debug

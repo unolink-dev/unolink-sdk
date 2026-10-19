@@ -14,6 +14,9 @@
     NSDictionary *properties = @{@"level": @3};
     [Unolink track:@"level_up" properties:properties];
     [Unolink track:@"level_up" properties:nil];
+    [Unolink onboardingStep:@"goal" index:@0 flow:nil];
+    [Unolink onboardingStep:@"plan" index:nil flow:@"v2"];
+    [Unolink onboardingSkipped:@"notifications" index:@2 flow:nil];
     [Unolink onboardingCompletedWithProperties:nil];
     [Unolink paywallViewedWithPlacement:@"onboarding" properties:nil];
     [Unolink paywallSkippedWithPlacement:nil properties:properties];

@@ -81,6 +81,20 @@ public final class Unolink: NSObject {
         withEngine { $0.track("onboarding_skipped", properties: onboarding(step, index, flow), revenue: nil) }
     }
 
+    /// Objective-C: `[Unolink onboardingStep:@"goal" index:@1 flow:nil]` (`index` an NSNumber or nil).
+    @available(swift, obsoleted: 1)
+    @objc(onboardingStep:index:flow:)
+    public static func objcOnboardingStep(_ step: String, index: NSNumber?, flow: String?) {
+        onboardingStep(step, index: index?.intValue, flow: flow)
+    }
+
+    /// Objective-C: `[Unolink onboardingSkipped:@"goal" index:nil flow:nil]`.
+    @available(swift, obsoleted: 1)
+    @objc(onboardingSkipped:index:flow:)
+    public static func objcOnboardingSkipped(_ step: String, index: NSNumber?, flow: String?) {
+        onboardingSkipped(step, index: index?.intValue, flow: flow)
+    }
+
     /// A paywall was shown. `placement` says where: "onboarding", "feature_gate", or your own name.
     @objc(paywallViewedWithPlacement:properties:)
     public static func paywallViewed(placement: String? = nil, properties: [String: Any]? = nil) {
@@ -175,7 +189,7 @@ public final class Unolink: NSObject {
     }
 
     /// The server accepts only these three on onboarding events.
-    private static func onboarding(_ step: String, _ index: Int?, _ flow: String?) -> [String: Any] {
+    static func onboarding(_ step: String, _ index: Int?, _ flow: String?) -> [String: Any] {
         var properties: [String: Any] = ["step": step]
         if let index { properties["index"] = index }
         if let flow { properties["flow"] = flow }
