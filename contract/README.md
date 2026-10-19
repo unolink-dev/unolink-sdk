@@ -72,7 +72,9 @@ most 200 characters), numbers or booleans; 4 KB in total.
 | `first_open` | SDK, once per install | no |
 | `session_start` | SDK, on launch or after 30 minutes in the background | no |
 | `app_background` | SDK | no |
-| `onboarding_completed` | app: the user finished the onboarding questions/screens (before any paywall or sign-up that follows them) | yes |
+| `onboarding_step` | app: an onboarding screen **appeared**; properties `step`, `index`, `flow` only (see below) | no |
+| `onboarding_skipped` | app: the user tapped Skip; `step` is the screen they tapped it on (see below) | no |
+| `onboarding_completed` | app: the user finished the onboarding questions/screens (before any paywall or sign-up that follows them); optional `flow` | yes |
 | `paywall_viewed`, `paywall_skipped` | app; property `placement` says where: `onboarding`, `feature_gate`, or the app's own name | yes |
 | `sign_up` | app: an account was created (often after the paywall) | yes |
 | `trial_started` | app | yes |
@@ -83,6 +85,31 @@ most 200 characters), numbers or booleans; 4 KB in total.
 Funnel steps are per app and configurable in the dashboard (any of these names, custom ones included), so apps whose
 screens come in a different order still get a meaningful funnel. Each step counts installs that sent the event at any
 time: the order never affects whether data is collected.
+`onboarding_step` and `onboarding_skipped` are not funnel steps: the dashboard's Onboarding view orders them.
+
+### Onboarding progress
+
+One `onboarding_step` per onboarding screen, sent when the screen appears (not when its button is tapped), one
+`onboarding_skipped` if the user taps Skip, and `onboarding_completed` at the end. They are **free**, so an onboarding
+costs one quota event (its `onboarding_completed`) however many screens it has. Because they are free, their
+properties are fixed:
+
+| Property | | |
+|---|---|---|
+| `step` | required | A stable screen ID such as `goal` or `notifications`, same pattern as event names. |
+| `index` | optional | The screen's position, an integer from 0 to 999. Lets the dashboard show the furthest screen reached. |
+| `flow` | optional | Which onboarding this is (an A/B variant, a remote-config version, re-onboarding), same pattern as event names. |
+
+- Any other property rejects the event with `validation`. So does a missing `step`.
+- **Never put user data in `step` or `flow`**: they are screen and variant IDs, shown to everyone on the dashboard.
+  The pattern allows no spaces and no `@`.
+- Per install, at most 100 of these events and at most 40 different (`flow`, `step`) pairs. Events past that are
+  rejected with `validation`.
+- Accepted even above the quota's hard cap, like the funnel events.
+- No "left the app" event is needed. The server works out each install's status: **completed**
+  (`onboarding_completed`), **skipped** at the screen in `onboarding_skipped`, **dropped** at the last screen if
+  nothing followed for 24 hours, **in progress** before that, and **not tracked** if the app sent no steps.
+  Back navigation, branches (give each screen its own ID), app kills and relaunches need no special handling.
 
 `revenue.amount` is a decimal **string**, never a float, so prices don't round. Only `purchase` carries revenue.
 

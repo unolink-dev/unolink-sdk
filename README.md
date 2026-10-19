@@ -15,7 +15,7 @@ views, trials and purchases, and send people who install from a link straight to
 - A **random install ID**, created on first launch and stored only in your app's own storage. A reinstall gets a new
   one. It is never linked to a person, an advertising ID or the device.
 - App version, OS version, SDK version, phone or tablet, language.
-- The events you send (`onboardingCompleted`, `paywallViewed`, `trialStarted`, `purchase`, your own) with the
+- The events you send (`onboardingStep`, `onboardingCompleted`, `paywallViewed`, `trialStarted`, `purchase`, your own) with the
   properties you choose, plus three automatic ones: first open, session start, app to background.
 - On Android, the Google Play install referrer, which says which Unolink link someone installed from.
 

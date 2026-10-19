@@ -27,7 +27,8 @@ enum Contract {
 }
 
 /// A small JSON Schema (2020-12) checker covering what contract/schemas use: type, required, properties, enum, const,
-/// pattern, min/maxLength, min/maxItems, items, maxProperties, additionalProperties, anyOf, if/then, local $ref, and
+/// pattern, min/maxLength, minimum/maximum, min/maxItems, items, maxProperties, additionalProperties, anyOf, allOf,
+/// if/then, local $ref, and
 /// the uuid/date-time formats.
 struct SchemaCheck {
     let root: [String: Any]
@@ -52,6 +53,10 @@ struct SchemaCheck {
                 if f == "date-time", parseDate(s) == nil { errors.append("\(path): not a date-time") }
             }
         }
+        if let n = value as? NSNumber, CFGetTypeID(n) != CFBooleanGetTypeID() {
+            if let min = schema["minimum"] as? Double, n.doubleValue < min { errors.append("\(path): below \(min)") }
+            if let max = schema["maximum"] as? Double, n.doubleValue > max { errors.append("\(path): above \(max)") }
+        }
         if let a = value as? [Any] {
             if let min = schema["minItems"] as? Int, a.count < min { errors.append("\(path): fewer than \(min) items") }
             if let max = schema["maxItems"] as? Int, a.count > max { errors.append("\(path): more than \(max) items") }
@@ -64,12 +69,14 @@ struct SchemaCheck {
             for (key, v) in o {
                 if let sub = props[key] as? [String: Any] { check(sub, v, "\(path).\(key)", &errors) }
                 else if let extra = schema["additionalProperties"] as? [String: Any] { check(extra, v, "\(path).\(key)", &errors) }
+                else if (schema["additionalProperties"] as? NSNumber)?.boolValue == false { errors.append("\(path).\(key): not allowed") }
             }
         }
         if let anyOf = schema["anyOf"] as? [[String: Any]] {
             let ok = anyOf.contains { sub in var e: [String] = []; check(sub, value, path, &e); return e.isEmpty }
             if !ok { errors.append("\(path): matches none of anyOf") }
         }
+        for sub in (schema["allOf"] as? [[String: Any]]) ?? [] { check(sub, value, path, &errors) }
         if let cond = schema["if"] as? [String: Any], let then = schema["then"] as? [String: Any] {
             var e: [String] = []
             check(cond, value, path, &e)

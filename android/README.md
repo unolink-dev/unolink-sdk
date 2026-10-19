@@ -17,6 +17,8 @@ class App : Application() {
     }
 }
 
+Unolink.onboardingStep("goal", index = 0)                // in a LaunchedEffect of each onboarding screen
+Unolink.onboardingSkipped("goal")
 Unolink.onboardingCompleted()
 Unolink.paywallViewed()
 Unolink.paywallSkipped()
@@ -24,6 +26,10 @@ Unolink.trialStarted(productId = "pro_yearly")
 Unolink.purchase(BigDecimal("49.99"), "USD", productId = "pro_yearly")
 Unolink.track("level_up", mapOf("level" to 3))
 ```
+
+Onboarding: call `onboardingStep` when each screen appears (not from its button), `onboardingSkipped` on Skip, then
+`onboardingCompleted`. The dashboard shows which screen people leave on. Step events are free. Screen IDs are fixed
+names such as `goal`, never user data.
 
 Java: `Unolink.configure(this, "ulk_…")`, `Unolink.purchase(new BigDecimal("49.99"), "USD")`, and so on.
 

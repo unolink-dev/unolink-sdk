@@ -73,6 +73,16 @@ class Unolink {
   /// The user finished the onboarding screens (send it before any paywall or sign-up that follows them).
   static Future<void> onboardingCompleted([Map<String, Object>? properties]) => track('onboarding_completed', properties);
 
+  /// An onboarding screen appeared. Call it when the screen shows (initState), not from its button. step is a fixed
+  /// screen ID such as 'goal', never user data; index its position (0, 1, 2…); flow which onboarding, if you run more
+  /// than one. Free: an onboarding costs one event (its onboardingCompleted) however many screens it has.
+  static Future<void> onboardingStep(String step, {int? index, String? flow}) =>
+      track('onboarding_step', _onboarding(step, index, flow));
+
+  /// The user tapped Skip on the onboarding screen step. Free, like onboardingStep.
+  static Future<void> onboardingSkipped(String step, {int? index, String? flow}) =>
+      track('onboarding_skipped', _onboarding(step, index, flow));
+
   /// A paywall was shown. placement: "onboarding", "feature_gate", or your own name.
   static Future<void> paywallViewed({String? placement, Map<String, Object>? properties}) =>
       track('paywall_viewed', _with('placement', placement, properties));
@@ -132,6 +142,10 @@ class Unolink {
       listener(pending);
     }
   }
+
+  /// The server accepts only step, index and flow on onboarding events.
+  static Map<String, Object> _onboarding(String step, int? index, String? flow) =>
+      {'step': step, if (index != null) 'index': index, if (flow != null) 'flow': flow};
 
   static Map<String, Object>? _with(String key, String? value, Map<String, Object>? properties) =>
       value == null ? properties : {...?properties, key: value};

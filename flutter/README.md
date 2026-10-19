@@ -18,6 +18,8 @@ Future<void> main() async {
   runApp(const MyApp());
 }
 
+Unolink.onboardingStep('goal', index: 0);                // in initState of each onboarding screen
+Unolink.onboardingSkipped('goal');
 Unolink.onboardingCompleted();
 Unolink.paywallViewed(placement: 'onboarding');
 Unolink.paywallSkipped(placement: 'onboarding');
@@ -26,6 +28,10 @@ Unolink.setUserId(revenueCatAppUserId);                  // the ID you pass to P
 Unolink.purchase('49.99', 'USD', productId: 'pro_yearly'); // not needed if RevenueCat is connected to Unolink
 Unolink.track('level_up', {'level': 3});
 ```
+
+Onboarding: call `onboardingStep` when each screen appears (not from its button), `onboardingSkipped` on Skip, then
+`onboardingCompleted`. The dashboard shows which screen people leave on. Step events are free. Screen IDs are fixed
+names such as `goal`, never user data.
 
 No extra setup on iOS or Android: the SDK needs no permissions beyond internet and no Info.plist entries.
 

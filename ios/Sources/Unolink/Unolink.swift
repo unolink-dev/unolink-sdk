@@ -69,6 +69,18 @@ public final class Unolink: NSObject {
         withEngine { $0.track("onboarding_completed", properties: properties, revenue: nil) }
     }
 
+    /// An onboarding screen appeared. Call it when the screen shows (`.onAppear`), not from its button. `step` is a fixed
+    /// screen ID such as "goal", never user data; `index` its position (0, 1, 2…); `flow` which onboarding, if you run
+    /// more than one. Free: an onboarding costs one event (its `onboardingCompleted`) however many screens it has.
+    public static func onboardingStep(_ step: String, index: Int? = nil, flow: String? = nil) {
+        withEngine { $0.track("onboarding_step", properties: onboarding(step, index, flow), revenue: nil) }
+    }
+
+    /// The user tapped Skip on the onboarding screen `step`. Free, like `onboardingStep`.
+    public static func onboardingSkipped(_ step: String, index: Int? = nil, flow: String? = nil) {
+        withEngine { $0.track("onboarding_skipped", properties: onboarding(step, index, flow), revenue: nil) }
+    }
+
     /// A paywall was shown. `placement` says where: "onboarding", "feature_gate", or your own name.
     @objc(paywallViewedWithPlacement:properties:)
     public static func paywallViewed(placement: String? = nil, properties: [String: Any]? = nil) {
@@ -160,6 +172,14 @@ public final class Unolink: NSObject {
     @objc(setEnabled:)
     public static func setEnabled(_ enabled: Bool) {
         withEngine { $0.setEnabled(enabled) }
+    }
+
+    /// The server accepts only these three on onboarding events.
+    private static func onboarding(_ step: String, _ index: Int?, _ flow: String?) -> [String: Any] {
+        var properties: [String: Any] = ["step": step]
+        if let index { properties["index"] = index }
+        if let flow { properties["flow"] = flow }
+        return properties
     }
 
     private static func with(_ key: String, _ value: String?, _ properties: [String: Any]?) -> [String: Any]? {

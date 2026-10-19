@@ -119,6 +119,24 @@ public object Unolink {
     }
 
     /**
+     * An onboarding screen appeared. Call it when the screen shows (`LaunchedEffect`), not from its button. [step] is a
+     * fixed screen ID such as "goal", never user data; [index] its position (0, 1, 2…); [flow] which onboarding, if you
+     * run more than one. Free: an onboarding costs one event (its [onboardingCompleted]) however many screens it has.
+     */
+    @JvmStatic
+    @JvmOverloads
+    public fun onboardingStep(step: String, index: Int? = null, flow: String? = null) {
+        withEngine { it.track("onboarding_step", onboarding(step, index, flow), null) }
+    }
+
+    /** The user tapped Skip on the onboarding screen [step]. Free, like [onboardingStep]. */
+    @JvmStatic
+    @JvmOverloads
+    public fun onboardingSkipped(step: String, index: Int? = null, flow: String? = null) {
+        withEngine { it.track("onboarding_skipped", onboarding(step, index, flow), null) }
+    }
+
+    /**
      * A paywall was shown. [placement] says where, so the funnel can tell them apart: "onboarding", "feature_gate", or
      * your own name.
      */
@@ -219,6 +237,14 @@ public object Unolink {
 
     private fun withProduct(productId: String?, properties: Map<String, Any?>?): Map<String, Any?>? =
         withValue("product_id", productId, properties)
+
+    /** The server accepts only these three on onboarding events. */
+    private fun onboarding(step: String, index: Int?, flow: String?): Map<String, Any?> =
+        buildMap {
+            put("step", step)
+            if (index != null) put("index", index)
+            if (flow != null) put("flow", flow)
+        }
 
     private fun withValue(key: String, value: String?, properties: Map<String, Any?>?): Map<String, Any?>? =
         if (value == null) properties else (properties.orEmpty() + (key to value))
