@@ -1,6 +1,6 @@
 {
   "name": "@unolink/react-native",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Unolink for React Native and Expo: which link or ad brings installs, onboarding, paywall views, trials and purchases.",
   "license": "MIT",
   "author": "Marin Capranov (Unolink)",
@@ -29,14 +29,19 @@
   "scripts": {
     "sync-native": "node scripts/sync-native.mjs",
     "prepack": "node scripts/sync-native.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
   },
   "peerDependencies": {
     "react": "*",
     "react-native": ">=0.79.0"
   },
   "devDependencies": {
+    "@babel/core": "^8.0.7",
+    "@babel/preset-env": "^8.0.7",
+    "@babel/preset-typescript": "^8.0.7",
     "@types/react": "^19.0.0",
+    "jest": "^30.5.2",
     "react": "19.1.0",
     "react-native": "0.81.4",
     "typescript": "^5.6.0"
@@ -51,5 +56,11 @@
     "android": {
       "javaPackageName": "dev.unolink.reactnative"
     }
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/test"
+    ]
   }
 }

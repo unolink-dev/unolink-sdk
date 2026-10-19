@@ -13,7 +13,7 @@ import Foundation
 @objc(Unolink)
 public final class Unolink: NSObject {
     /// This SDK's version.
-    @objc(sdkVersion) public static let version = "0.1.1"
+    @objc(sdkVersion) public static let version = "0.2.0"
 
     private static let lock = NSLock()
     private static var engine: Engine?
@@ -23,7 +23,7 @@ public final class Unolink: NSObject {
     private override init() {}
 
     /// Starts the SDK: registers the install on first launch, then reports sessions and your events.
-    /// - Parameter apiKey: The app's SDK key from Unolink (dashboard → your app → SDK). It is fine to ship it in the app.
+    /// - Parameter apiKey: The app's SDK key from Unolink (dashboard → your app → Settings → API keys). It is fine to ship it in the app.
     @objc(configureWithApiKey:options:)
     public static func configure(apiKey: String, options: UnolinkOptions = UnolinkOptions()) {
         configure(apiKey: apiKey, options: options, sdkName: "ios", sdkVersion: version)
@@ -79,6 +79,20 @@ public final class Unolink: NSObject {
     /// The user tapped Skip on the onboarding screen `step`. Free, like `onboardingStep`.
     public static func onboardingSkipped(_ step: String, index: Int? = nil, flow: String? = nil) {
         withEngine { $0.track("onboarding_skipped", properties: onboarding(step, index, flow), revenue: nil) }
+    }
+
+    /// Objective-C: `[Unolink onboardingStep:@"goal" index:@1 flow:nil]` (`index` an NSNumber or nil).
+    @available(swift, obsoleted: 1)
+    @objc(onboardingStep:index:flow:)
+    public static func objcOnboardingStep(_ step: String, index: NSNumber?, flow: String?) {
+        onboardingStep(step, index: index?.intValue, flow: flow)
+    }
+
+    /// Objective-C: `[Unolink onboardingSkipped:@"goal" index:nil flow:nil]`.
+    @available(swift, obsoleted: 1)
+    @objc(onboardingSkipped:index:flow:)
+    public static func objcOnboardingSkipped(_ step: String, index: NSNumber?, flow: String?) {
+        onboardingSkipped(step, index: index?.intValue, flow: flow)
     }
 
     /// A paywall was shown. `placement` says where: "onboarding", "feature_gate", or your own name.
@@ -175,7 +189,7 @@ public final class Unolink: NSObject {
     }
 
     /// The server accepts only these three on onboarding events.
-    private static func onboarding(_ step: String, _ index: Int?, _ flow: String?) -> [String: Any] {
+    static func onboarding(_ step: String, _ index: Int?, _ flow: String?) -> [String: Any] {
         var properties: [String: Any] = ["step": step]
         if let index { properties["index"] = index }
         if let flow { properties["flow"] = flow }

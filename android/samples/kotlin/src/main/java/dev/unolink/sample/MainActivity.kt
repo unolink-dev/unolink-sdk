@@ -27,6 +27,9 @@ class MainActivity : Activity() {
             setOnClickListener { action(); refresh("Sent: $label") }
         }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
+        button("Onboarding screen: goal (0)") { Unolink.onboardingStep("goal", index = 0) }
+        button("Onboarding screen: plan (1)") { Unolink.onboardingStep("plan", index = 1) }
+        button("Skip onboarding screen: notifications (2)") { Unolink.onboardingSkipped("notifications", index = 2) }
         button("Onboarding completed") { Unolink.onboardingCompleted(mapOf("steps" to 4)) }
         button("Paywall viewed (onboarding)") { Unolink.paywallViewed(placement = "onboarding") }
         button("Paywall skipped") { Unolink.paywallSkipped(placement = "onboarding") }

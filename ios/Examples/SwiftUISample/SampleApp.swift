@@ -14,6 +14,9 @@ struct SampleApp: App {
     }
 
     static func fireAll() {
+        Unolink.onboardingStep("goal", index: 0)
+        Unolink.onboardingStep("plan", index: 1)
+        Unolink.onboardingSkipped("notifications", index: 2)
         Unolink.onboardingCompleted(properties: ["steps": 4])
         Unolink.paywallViewed(placement: "onboarding")
         Unolink.paywallSkipped(placement: "onboarding")
@@ -57,6 +60,9 @@ struct ContentView: View {
                     if !state.note.isEmpty { Text(state.note).foregroundColor(.secondary) }
                 }
                 Section("Events") {
+                    button("Onboarding screen: goal (0)") { Unolink.onboardingStep("goal", index: 0) }
+                    button("Onboarding screen: plan (1)") { Unolink.onboardingStep("plan", index: 1) }
+                    button("Skip onboarding screen: notifications (2)") { Unolink.onboardingSkipped("notifications", index: 2) }
                     button("Onboarding completed") { Unolink.onboardingCompleted(properties: ["steps": 4]) }
                     button("Paywall viewed (onboarding)") { Unolink.paywallViewed(placement: "onboarding") }
                     button("Paywall skipped") { Unolink.paywallSkipped(placement: "onboarding") }

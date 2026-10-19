@@ -1,3 +1,8 @@
+## 0.2.0
+
+* `onboardingStep(step, index:, flow:)` when an onboarding screen appears and `onboardingSkipped(...)` when someone skips it. Both are free (they don't count toward your events) and show where people leave your onboarding.
+* Error messages point to where SDK keys now live in the dashboard: your app → Settings → API keys.
+
 ## 0.1.1
 
 * Android: Google's test phones (Play pre-launch reports, Firebase Test Lab) are always marked as test devices, so they're left out of your numbers by default.

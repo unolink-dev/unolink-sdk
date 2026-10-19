@@ -28,6 +28,10 @@ public class MainActivity extends Activity {
         properties.put("level", 3);
         Unolink.track("level_up");
         Unolink.track("level_up", properties);
+        Unolink.onboardingStep("goal");
+        Unolink.onboardingStep("goal", 0);
+        Unolink.onboardingStep("plan", 1, "v2");
+        Unolink.onboardingSkipped("notifications", 2);
         Unolink.onboardingCompleted();
         Unolink.paywallViewed();
         Unolink.paywallViewed("onboarding");

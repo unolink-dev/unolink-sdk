@@ -5,14 +5,14 @@ Kotlin, callable from Java. minSdk 23. Dependencies: Google's Play Install Refer
 
 ```kotlin
 // build.gradle.kts
-implementation("dev.unolink:unolink:0.1.1")
+implementation("dev.unolink:unolink:0.2.0")
 ```
 
 ```kotlin
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
-        Unolink.configure(this, "ulk_…") // your app's SDK key (Unolink → your app → SDK)
+        Unolink.configure(this, "ulk_…") // your app's SDK key (Unolink → your app → Settings → API keys)
         Unolink.setDeferredDeepLinkListener { link -> /* open link.deepLink */ }
     }
 }

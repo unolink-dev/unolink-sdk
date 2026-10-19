@@ -25,6 +25,7 @@ final class SchemaCheckTests: XCTestCase {
         XCTAssertFalse(errors("events-request", event("onboarding_step", #"{"index":0}"#)).isEmpty, "step without step")
         XCTAssertFalse(errors("events-request", event("onboarding_skipped", #"{"step":"goal","email":"a@b.c"}"#)).isEmpty, "extra property")
         XCTAssertFalse(errors("events-request", event("onboarding_step", #"{"step":"goal","index":-1}"#)).isEmpty, "negative index")
+        XCTAssertFalse(errors("events-request", event("onboarding_step", #"{"step":"Goal screen"}"#)).isEmpty, "step not a screen ID")
         XCTAssertTrue(errors("events-request", event("level_up", #"{"email":"a@b.c"}"#)).isEmpty, "custom events are free-form")
     }
 }

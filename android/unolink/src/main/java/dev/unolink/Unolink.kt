@@ -33,7 +33,7 @@ import java.math.BigDecimal
  */
 public object Unolink {
     /** This SDK's version. */
-    public const val VERSION: String = "0.1.1"
+    public const val VERSION: String = "0.2.0"
 
     @Volatile private var engine: Engine? = null
     @Volatile private var pendingListener: DeferredDeepLinkListener? = null
@@ -42,7 +42,7 @@ public object Unolink {
      * Starts the SDK: registers the install on first launch (with Google Play's install referrer, so installs from
      * your Unolink links are attributed), then reports sessions and your events.
      *
-     * @param apiKey The app's SDK key from Unolink (dashboard → your app → SDK). It is fine to ship it in the app.
+     * @param apiKey The app's SDK key from Unolink (dashboard → your app → Settings → API keys). It is fine to ship it in the app.
      */
     @JvmStatic
     @JvmOverloads
@@ -239,7 +239,7 @@ public object Unolink {
         withValue("product_id", productId, properties)
 
     /** The server accepts only these three on onboarding events. */
-    private fun onboarding(step: String, index: Int?, flow: String?): Map<String, Any?> =
+    internal fun onboarding(step: String, index: Int?, flow: String?): Map<String, Any?> =
         buildMap {
             put("step", step)
             if (index != null) put("index", index)
