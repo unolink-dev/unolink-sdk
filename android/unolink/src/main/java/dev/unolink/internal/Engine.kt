@@ -254,7 +254,7 @@ internal class Engine(
             }
             response.status == 401 -> {
                 stopped = true
-                log.error("Invalid SDK key (401). Check the key in Unolink → your app → SDK. Nothing is sent until the next launch.")
+                log.error("Invalid SDK key (401). Check the key in Unolink → your app → Settings → API keys. Nothing is sent until the next launch.")
             }
             response.status == 403 -> {
                 stopped = true

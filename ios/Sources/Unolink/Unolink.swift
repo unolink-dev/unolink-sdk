@@ -23,7 +23,7 @@ public final class Unolink: NSObject {
     private override init() {}
 
     /// Starts the SDK: registers the install on first launch, then reports sessions and your events.
-    /// - Parameter apiKey: The app's SDK key from Unolink (dashboard → your app → SDK). It is fine to ship it in the app.
+    /// - Parameter apiKey: The app's SDK key from Unolink (dashboard → your app → Settings → API keys). It is fine to ship it in the app.
     @objc(configureWithApiKey:options:)
     public static func configure(apiKey: String, options: UnolinkOptions = UnolinkOptions()) {
         configure(apiKey: apiKey, options: options, sdkName: "ios", sdkVersion: version)

@@ -42,7 +42,7 @@ public object Unolink {
      * Starts the SDK: registers the install on first launch (with Google Play's install referrer, so installs from
      * your Unolink links are attributed), then reports sessions and your events.
      *
-     * @param apiKey The app's SDK key from Unolink (dashboard → your app → SDK). It is fine to ship it in the app.
+     * @param apiKey The app's SDK key from Unolink (dashboard → your app → Settings → API keys). It is fine to ship it in the app.
      */
     @JvmStatic
     @JvmOverloads

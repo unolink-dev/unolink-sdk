@@ -12,7 +12,7 @@ implementation("dev.unolink:unolink:0.1.1")
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
-        Unolink.configure(this, "ulk_…") // your app's SDK key (Unolink → your app → SDK)
+        Unolink.configure(this, "ulk_…") // your app's SDK key (Unolink → your app → Settings → API keys)
         Unolink.setDeferredDeepLinkListener { link -> /* open link.deepLink */ }
     }
 }
