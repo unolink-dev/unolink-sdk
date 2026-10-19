@@ -36,8 +36,9 @@ enum Payloads {
             }
             switch value {
             case let s as String: out[key] = String(s.prefix(maxString))
+            // No `case let b as Bool`: Swift reads any NSNumber 0 or 1 as a Bool, and React Native and Flutter hand every
+            // number over as NSNumber. A real Bool (Swift or bridged) is an NSNumber of CFBoolean type, caught here.
             case let n as NSNumber where CFGetTypeID(n) == CFBooleanGetTypeID(): out[key] = n.boolValue
-            case let b as Bool: out[key] = b
             case let d as Decimal: out[key] = NSDecimalNumber(decimal: d)
             case let d as Double where !d.isFinite: log.warn("Property \"\(key)\" is not a finite number; dropped.")
             case let f as Float where !f.isFinite: log.warn("Property \"\(key)\" is not a finite number; dropped.")

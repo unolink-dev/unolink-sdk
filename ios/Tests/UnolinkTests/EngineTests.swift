@@ -252,4 +252,19 @@ final class PayloadsTests: XCTestCase {
         XCTAssertEqual(Set(p.keys), ["s", "n", "b"])
         XCTAssertEqual((p["s"] as! String).count, 200)
     }
+
+    /// React Native and Flutter hand numbers over as NSNumber; 0 and 1 must stay numbers (Swift would happily read them
+    /// as Bool), or onboardingStep(index: 0/1) arrives as false/true and the server refuses it.
+    func testBridgedNumbersZeroAndOneStayNumbers() {
+        let p = Payloads.properties(["zero": NSNumber(value: 0), "one": NSNumber(value: 1.0), "yes": NSNumber(value: true), "native": true], log: QuietLogger())!
+        let json = String(data: try! JSONSerialization.data(withJSONObject: p, options: .sortedKeys), encoding: .utf8)!
+        XCTAssertEqual(json, #"{"native":true,"one":1,"yes":true,"zero":0}"#)
+
+        let h = Harness()
+        h.engine.start()
+        h.server.requests.removeAll()
+        h.engine.track("onboarding_step", properties: ["step": "welcome", "index": NSNumber(value: 0.0)], revenue: nil)
+        h.engine.flushNow()
+        Contract.assertValid("events-request", h.server.requests.last!.body!)
+    }
 }

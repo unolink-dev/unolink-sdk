@@ -33,7 +33,7 @@ import java.math.BigDecimal
  */
 public object Unolink {
     /** This SDK's version. */
-    public const val VERSION: String = "0.2.0"
+    public const val VERSION: String = "0.2.1"
 
     @Volatile private var engine: Engine? = null
     @Volatile private var pendingListener: DeferredDeepLinkListener? = null

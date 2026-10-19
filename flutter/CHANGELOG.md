@@ -1,3 +1,7 @@
+## 0.2.1
+
+* iPhone: numbers 0 and 1 passed from Flutter (or React Native) were sent as false/true, so `onboardingStep(index: 0)` and `index: 1` were refused and their screens didn't show. They're sent as numbers now.
+
 ## 0.2.0
 
 * `onboardingStep(step, index:, flow:)` when an onboarding screen appears and `onboardingSkipped(...)` when someone skips it. Both are free (they don't count toward your events) and show where people leave your onboarding.
