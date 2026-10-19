@@ -1,0 +1,27 @@
+{
+  "name": "onboarding_progress",
+  "description": "onboarding_step and onboarding_skipped carry only step, index and flow, and are kept even over the quota's hard cap. Anything else on them is rejected with validation.",
+  "setup": { "plan": "pro", "key": "valid", "usageThisMonth": 2000000 },
+  "steps": [
+    {
+      "request": { "method": "POST", "path": "/v1/install", "body": {
+        "installId": "${uuid:install}", "platform": "ios", "sdk": { "name": "ios", "version": "1.0.0" } } },
+      "expect": { "status": 200 }
+    },
+    {
+      "request": { "method": "POST", "path": "/v1/events", "body": { "installId": "${uuid:install}", "events": [
+        { "id": "${uuid:step}", "name": "onboarding_step", "timestamp": "${now}", "properties": { "step": "goal", "index": 0, "flow": "v2" } },
+        { "id": "${uuid:skipped}", "name": "onboarding_skipped", "timestamp": "${now}", "properties": { "step": "notifications", "index": 3 } },
+        { "id": "${uuid:completed}", "name": "onboarding_completed", "timestamp": "${now}", "properties": { "flow": "v2" } },
+        { "id": "${uuid:no_step}", "name": "onboarding_step", "timestamp": "${now}" },
+        { "id": "${uuid:extra}", "name": "onboarding_step", "timestamp": "${now}", "properties": { "step": "goal", "email": "a@b.c" } },
+        { "id": "${uuid:bad_step}", "name": "onboarding_step", "timestamp": "${now}", "properties": { "step": "Goal screen" } },
+        { "id": "${uuid:bad_index}", "name": "onboarding_step", "timestamp": "${now}", "properties": { "step": "goal", "index": -1 } } ] } },
+      "expect": { "status": 202, "schema": "events-response", "body": { "accepted": 3, "duplicates": 0, "rejected": [
+        { "id": "${uuid:no_step}", "code": "validation" },
+        { "id": "${uuid:extra}", "code": "validation" },
+        { "id": "${uuid:bad_step}", "code": "validation" },
+        { "id": "${uuid:bad_index}", "code": "validation" } ] } }
+    }
+  ]
+}

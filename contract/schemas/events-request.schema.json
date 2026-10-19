@@ -78,23 +78,71 @@
             }
           }
         },
-        "if": {
-          "properties": {
-            "name": {
-              "const": "purchase"
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "purchase"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "revenue"
+              ],
+              "properties": {
+                "revenue": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "enum": [
+                    "onboarding_step",
+                    "onboarding_skipped"
+                  ]
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            "then": {
+              "required": [
+                "properties"
+              ],
+              "properties": {
+                "properties": {
+                  "type": "object",
+                  "required": [
+                    "step"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "step": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.]{0,63}$"
+                    },
+                    "index": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 999
+                    },
+                    "flow": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_.]{0,63}$"
+                    }
+                  }
+                }
+              }
             }
           }
-        },
-        "then": {
-          "required": [
-            "revenue"
-          ],
-          "properties": {
-            "revenue": {
-              "type": "object"
-            }
-          }
-        }
+        ]
       }
     },
     "userId": {
