@@ -35,7 +35,7 @@ class Unolink {
   Unolink._();
 
   /// This package's version (sent with every install as the SDK version).
-  static const String version = '0.2.0';
+  static const String version = '0.2.1';
 
   static const MethodChannel _channel = MethodChannel('dev.unolink/sdk');
   static void Function(UnolinkDeepLink link)? _deepLinkListener;

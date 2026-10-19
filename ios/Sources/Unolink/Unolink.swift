@@ -13,7 +13,7 @@ import Foundation
 @objc(Unolink)
 public final class Unolink: NSObject {
     /// This SDK's version.
-    @objc(sdkVersion) public static let version = "0.2.0"
+    @objc(sdkVersion) public static let version = "0.2.1"
 
     private static let lock = NSLock()
     private static var engine: Engine?

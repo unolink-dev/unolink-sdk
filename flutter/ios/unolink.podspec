@@ -2,7 +2,7 @@
 # copied in by tool/sync_native.sh), so it needs nothing from CocoaPods trunk.
 Pod::Spec.new do |s|
   s.name             = 'unolink'
-  s.version          = '0.2.0'
+  s.version          = '0.2.1'
   s.summary          = 'Unolink for Flutter: install attribution and the install-to-purchase funnel.'
   s.homepage         = 'https://unolink.dev/docs'
   s.license          = { :type => 'MIT' }
