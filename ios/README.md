@@ -20,6 +20,8 @@ struct MyApp: App {
     // …
 }
 
+Unolink.onboardingStep("goal", index: 0)                 // in .onAppear of each onboarding screen
+Unolink.onboardingSkipped("goal")
 Unolink.onboardingCompleted()
 Unolink.paywallViewed(placement: "onboarding")
 Unolink.paywallSkipped(placement: "onboarding")
@@ -30,6 +32,10 @@ Unolink.purchase(amount: product.price, currency: "USD", productId: product.id) 
 Unolink.purchaseCancelled(productId: product.id)
 Unolink.track("level_up", properties: ["level": 3])
 ```
+
+Onboarding: call `onboardingStep` when each screen appears (not from its button), `onboardingSkipped` on Skip, then
+`onboardingCompleted`. The dashboard shows which screen people leave on. Step events are free. Screen IDs are fixed
+names such as `goal`, never user data.
 
 Objective-C: `[Unolink configureWithApiKey:@"ulk_…" options:[UNLOptions new]];`,
 `[Unolink paywallViewedWithPlacement:@"onboarding" properties:nil];`,

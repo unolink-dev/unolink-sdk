@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import type { EventSubscription } from "react-native"
 import Native from "./NativeRNUnolink"
 
@@ -28,6 +29,17 @@ export type UnolinkDeepLink = {
 
 export type Properties = Record<string, string | number | boolean>
 
+/** Where an onboarding screen sits: its position (0, 1, 2…) and which onboarding it belongs to, if you run more than one. */
+export type OnboardingScreen = { index?: number; flow?: string }
+
+/** The server accepts only step, index and flow on onboarding events. */
+function onboarding(step: string, screen?: OnboardingScreen): Properties {
+  const properties: Properties = { step }
+  if (screen?.index != null) properties.index = screen.index
+  if (screen?.flow != null) properties.flow = screen.flow
+  return properties
+}
+
 function withValue(key: string, value: string | undefined | null, properties?: Properties): Properties | null {
   if (value == null) return properties ?? null
   return { ...properties, [key]: value }
@@ -51,6 +63,20 @@ export const Unolink = {
   /** The user finished the onboarding screens (send it before any paywall or sign-up that follows them). */
   onboardingCompleted(properties?: Properties): void {
     Native.track("onboarding_completed", properties ?? null)
+  },
+
+  /**
+   * An onboarding screen appeared. Call it when the screen shows (or use `useOnboardingStep`), not from its button.
+   * `step` is a fixed screen ID such as "goal", never user data. Free: an onboarding costs one event (its
+   * `onboardingCompleted`) however many screens it has.
+   */
+  onboardingStep(step: string, screen?: OnboardingScreen): void {
+    Native.track("onboarding_step", onboarding(step, screen))
+  },
+
+  /** The user tapped Skip on the onboarding screen `step`. Free, like `onboardingStep`. */
+  onboardingSkipped(step: string, screen?: OnboardingScreen): void {
+    Native.track("onboarding_skipped", onboarding(step, screen))
   },
 
   /** A paywall was shown. placement: "onboarding", "feature_gate", or your own name. */
@@ -118,6 +144,15 @@ export const Unolink = {
   addDeferredDeepLinkListener(listener: (link: UnolinkDeepLink) => void): EventSubscription {
     return Native.onDeferredDeepLink((link) => listener(link as UnolinkDeepLink))
   },
+}
+
+/** Sends `onboardingStep` when the screen mounts: `useOnboardingStep("goal", { index: 0 })`. */
+export function useOnboardingStep(step: string, screen?: OnboardingScreen): void {
+  const index = screen?.index
+  const flow = screen?.flow
+  useEffect(() => {
+    Unolink.onboardingStep(step, { index, flow })
+  }, [step, index, flow])
 }
 
 export default Unolink
