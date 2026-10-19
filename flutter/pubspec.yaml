@@ -1,6 +1,6 @@
 name: unolink
 description: Unolink for Flutter. See which link or ad brings installs, onboarding, paywall views, trials and purchases.
-version: 0.1.1
+version: 0.2.0
 homepage: https://unolink.dev/docs
 repository: https://github.com/unolink-dev/unolink-sdk/tree/main/flutter
 
