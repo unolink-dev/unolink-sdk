@@ -128,9 +128,23 @@ internal object AndroidDevice {
             locale = Locale.getDefault().toLanguageTag(),
             // Google's test phones (Play pre-launch reports run on Firebase Test Lab) tap every button of every new
             // upload; they are never real users, so they're always test devices, whatever `debug` says.
-            isDebug = (debug ?: debuggable) || isTestLab(context),
+            isDebug = (debug ?: debuggable) || isTestLab(context) || isSelfInstalled(installer(context)),
         )
     }
+
+    /** The app that installed this one ("com.android.vending" for Google Play), or null when nothing did (adb). */
+    fun installer(context: Context): String? = runCatching {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) context.packageManager.getInstallSourceInfo(context.packageName).installingPackageName
+        else @Suppress("DEPRECATION") context.packageManager.getInstallerPackageName(context.packageName)
+    }.getOrNull()
+
+    /**
+     * Installed by its developer, not from a store: `adb install` / Android Studio leave no installer, or the shell. Any
+     * store (Google Play, Samsung, Huawei, Amazon…) or a browser download counts as a real install. Google Play testing
+     * tracks can't be told apart from the store release on the phone: those builds pass `debug` themselves.
+     */
+    fun isSelfInstalled(installer: String?): Boolean = installer == null || installer == "com.android.shell"
+
 
     /** Firebase Test Lab (and so Google Play's pre-launch report) sets this system setting on its devices. */
     fun isTestLab(context: Context): Boolean =

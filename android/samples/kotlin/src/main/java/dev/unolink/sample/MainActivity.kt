@@ -34,6 +34,7 @@ class MainActivity : Activity() {
         button("Paywall viewed (onboarding)") { Unolink.paywallViewed(placement = "onboarding") }
         button("Paywall skipped") { Unolink.paywallSkipped(placement = "onboarding") }
         button("Sign up (set user ID)") { Unolink.setUserId(sampleUserId()); Unolink.signUp(method = "email") }
+        button("Sign in (returning user)") { Unolink.setUserId(sampleUserId()); Unolink.signIn(method = "google") }
         button("Trial started") { Unolink.trialStarted(productId = "pro_yearly") }
         button("Purchase 4.99 USD") { Unolink.purchase(BigDecimal("4.99"), "USD", productId = "pro_monthly") }
         button("Purchase cancelled") { Unolink.purchaseCancelled(productId = "pro_monthly") }

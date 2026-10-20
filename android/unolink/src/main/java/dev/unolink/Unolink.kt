@@ -33,7 +33,7 @@ import java.math.BigDecimal
  */
 public object Unolink {
     /** This SDK's version. */
-    public const val VERSION: String = "0.2.1"
+    public const val VERSION: String = "0.3.0"
 
     @Volatile private var engine: Engine? = null
     @Volatile private var pendingListener: DeferredDeepLinkListener? = null
@@ -158,6 +158,13 @@ public object Unolink {
     @JvmOverloads
     public fun signUp(method: String? = null, properties: Map<String, Any?>? = null) {
         withEngine { it.track("sign_up", withValue("method", method, properties), null) }
+    }
+
+    /** Someone signed in to an account they already had (a returning user). Not for new accounts: those are [signUp]. */
+    @JvmStatic
+    @JvmOverloads
+    public fun signIn(method: String? = null, properties: Map<String, Any?>? = null) {
+        withEngine { it.track("sign_in", withValue("method", method, properties), null) }
     }
 
     /** The user closed the store's purchase sheet without paying. */

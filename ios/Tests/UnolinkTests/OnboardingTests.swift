@@ -35,3 +35,12 @@ final class OnboardingTests: XCTestCase {
         XCTAssertEqual(properties["step"] as? String, "notifications")
     }
 }
+
+/// TestFlight and Xcode builds carry a sandbox receipt; only App Store installs are real users.
+final class TestBuildTests: XCTestCase {
+    func testOnlyTheSandboxReceiptIsATestBuild() {
+        XCTAssertTrue(AppleDevice.isTestBuild(receiptName: "sandboxReceipt"))
+        XCTAssertFalse(AppleDevice.isTestBuild(receiptName: "receipt"))
+        XCTAssertFalse(AppleDevice.isTestBuild(receiptName: nil))
+    }
+}

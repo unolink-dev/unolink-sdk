@@ -13,7 +13,7 @@ import Foundation
 @objc(Unolink)
 public final class Unolink: NSObject {
     /// This SDK's version.
-    @objc(sdkVersion) public static let version = "0.2.1"
+    @objc(sdkVersion) public static let version = "0.3.0"
 
     private static let lock = NSLock()
     private static var engine: Engine?
@@ -111,6 +111,12 @@ public final class Unolink: NSObject {
     @objc(signUpWithMethod:properties:)
     public static func signUp(method: String? = nil, properties: [String: Any]? = nil) {
         withEngine { $0.track("sign_up", properties: with("method", method, properties), revenue: nil) }
+    }
+
+    /// Someone signed in to an account they already had (a returning user). Not for new accounts: those are `signUp`.
+    @objc(signInWithMethod:properties:)
+    public static func signIn(method: String? = nil, properties: [String: Any]? = nil) {
+        withEngine { $0.track("sign_in", properties: with("method", method, properties), revenue: nil) }
     }
 
     /// A free trial started.

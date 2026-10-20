@@ -25,7 +25,8 @@ Unolink.onboardingSkipped("goal")
 Unolink.onboardingCompleted()
 Unolink.paywallViewed(placement: "onboarding")
 Unolink.paywallSkipped(placement: "onboarding")
-Unolink.signUp(method: "apple")
+Unolink.signUp(method: "apple")                // a new account
+Unolink.signIn(method: "apple")                // a returning user signed in
 Unolink.setUserId(revenueCatAppUserId)            // stored by Unolink only as a keyed hash
 Unolink.trialStarted(productId: "pro_yearly")
 Unolink.purchase(amount: product.price, currency: "USD", productId: product.id)   // amount: Decimal

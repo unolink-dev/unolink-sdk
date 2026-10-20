@@ -45,4 +45,12 @@ void main() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
     await Unolink.onboardingStep('goal');
   });
+
+  test('signIn sends sign_in with its method', () async {
+    await Unolink.signIn(method: 'apple');
+    expect(calls.single.arguments, {
+      'name': 'sign_in',
+      'properties': {'method': 'apple'},
+    });
+  });
 }
