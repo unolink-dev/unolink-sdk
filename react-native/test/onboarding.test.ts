@@ -42,3 +42,10 @@ test("useOnboardingStep sends once per screen, not on every render", () => {
   expect(mockTrack).toHaveBeenCalledTimes(2)
   expect(mockTrack).toHaveBeenLastCalledWith("onboarding_step", { step: "plan", index: 2 })
 })
+
+test("signIn is a returning user's sign-in, apart from signUp", () => {
+  Unolink.signIn("apple")
+  expect(mockTrack).toHaveBeenCalledWith("sign_in", { method: "apple" })
+  Unolink.signUp("email")
+  expect(mockTrack).toHaveBeenLastCalledWith("sign_up", { method: "email" })
+})

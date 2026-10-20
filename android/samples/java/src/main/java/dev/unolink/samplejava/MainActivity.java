@@ -38,6 +38,8 @@ public class MainActivity extends Activity {
         Unolink.paywallSkipped("feature_gate", properties);
         Unolink.signUp();
         Unolink.signUp("apple");
+        Unolink.signIn();
+        Unolink.signIn("google");
         Unolink.purchaseCancelled("pro_yearly");
         Unolink.purchaseFailed("pro_yearly", "card_declined");
         Unolink.setUserId("supabase-user-uuid");

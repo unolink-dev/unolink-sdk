@@ -23,7 +23,8 @@ Unolink.onboardingSkipped('goal');
 Unolink.onboardingCompleted();
 Unolink.paywallViewed(placement: 'onboarding');
 Unolink.paywallSkipped(placement: 'onboarding');
-Unolink.signUp(method: 'apple');
+Unolink.signUp(method: 'apple');               // a new account
+Unolink.signIn(method: 'apple');               // a returning user signed in
 Unolink.setUserId(revenueCatAppUserId);                  // the ID you pass to Purchases.logIn
 Unolink.purchase('49.99', 'USD', productId: 'pro_yearly'); // not needed if RevenueCat is connected to Unolink
 Unolink.track('level_up', {'level': 3});

@@ -22,6 +22,7 @@ struct SampleApp: App {
         Unolink.paywallSkipped(placement: "onboarding")
         Unolink.setUserId("ios-sample-user")
         Unolink.signUp(method: "apple")
+        Unolink.signIn(method: "apple")
         Unolink.trialStarted(productId: "pro_yearly")
         Unolink.purchase(amount: Decimal(string: "4.99")!, currency: "USD", productId: "pro_monthly")
         Unolink.purchaseCancelled(productId: "pro_monthly")
@@ -67,6 +68,7 @@ struct ContentView: View {
                     button("Paywall viewed (onboarding)") { Unolink.paywallViewed(placement: "onboarding") }
                     button("Paywall skipped") { Unolink.paywallSkipped(placement: "onboarding") }
                     button("Sign up (set user ID)") { Unolink.setUserId("ios-sample-user"); Unolink.signUp(method: "apple") }
+                    button("Sign in (returning user)") { Unolink.setUserId("ios-sample-user"); Unolink.signIn(method: "apple") }
                     button("Trial started") { Unolink.trialStarted(productId: "pro_yearly") }
                     button("Purchase 4.99 USD") { Unolink.purchase(amount: Decimal(string: "4.99")!, currency: "USD", productId: "pro_monthly") }
                     button("Purchase cancelled") { Unolink.purchaseCancelled(productId: "pro_monthly") }

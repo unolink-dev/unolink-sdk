@@ -23,6 +23,7 @@ Future<void> _fireAll() async {
   await Unolink.paywallSkipped(placement: 'onboarding');
   await Unolink.setUserId('flutter-sample-user');
   await Unolink.signUp(method: 'email');
+  await Unolink.signIn(method: 'email');
   await Unolink.trialStarted(productId: 'pro_yearly');
   await Unolink.purchase('4.99', 'USD', productId: 'pro_monthly');
   await Unolink.purchaseCancelled(productId: 'pro_monthly');
@@ -78,6 +79,10 @@ class _SampleAppState extends State<SampleApp> {
           _button('Sign up (set user ID)', () async {
             await Unolink.setUserId('flutter-sample-user');
             await Unolink.signUp(method: 'email');
+          }),
+          _button('Sign in (returning user)', () async {
+            await Unolink.setUserId('flutter-sample-user');
+            await Unolink.signIn(method: 'email');
           }),
           _button('Trial started', () => Unolink.trialStarted(productId: 'pro_yearly')),
           _button('Purchase 4.99 USD', () => Unolink.purchase('4.99', 'USD', productId: 'pro_monthly')),

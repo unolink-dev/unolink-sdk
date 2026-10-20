@@ -21,6 +21,7 @@
     [Unolink paywallViewedWithPlacement:@"onboarding" properties:nil];
     [Unolink paywallSkippedWithPlacement:nil properties:properties];
     [Unolink signUpWithMethod:@"apple" properties:nil];
+    [Unolink signInWithMethod:@"apple" properties:nil];
     [Unolink trialStartedWithProductId:@"pro_yearly" properties:nil];
     [Unolink purchaseWithAmount:[NSDecimalNumber decimalNumberWithString:@"4.99"] currency:@"USD" productId:@"pro_monthly" properties:nil];
     [Unolink purchaseCancelledWithProductId:nil properties:nil];

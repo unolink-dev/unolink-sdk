@@ -35,7 +35,7 @@ class Unolink {
   Unolink._();
 
   /// This package's version (sent with every install as the SDK version).
-  static const String version = '0.2.1';
+  static const String version = '0.3.0';
 
   static const MethodChannel _channel = MethodChannel('dev.unolink/sdk');
   static void Function(UnolinkDeepLink link)? _deepLinkListener;
@@ -94,6 +94,10 @@ class Unolink {
   /// An account was created.
   static Future<void> signUp({String? method, Map<String, Object>? properties}) =>
       track('sign_up', _with('method', method, properties));
+
+  /// Someone signed in to an account they already had (a returning user). Not for new accounts: those are signUp.
+  static Future<void> signIn({String? method, Map<String, Object>? properties}) =>
+      track('sign_in', _with('method', method, properties));
 
   /// A free trial started. Not needed when RevenueCat is connected to Unolink.
   static Future<void> trialStarted({String? productId, Map<String, Object>? properties}) =>

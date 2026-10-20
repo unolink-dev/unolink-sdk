@@ -77,6 +77,7 @@ most 200 characters), numbers or booleans; 4 KB in total.
 | `onboarding_completed` | app: the user finished the onboarding questions/screens (before any paywall or sign-up that follows them); optional `flow` | yes |
 | `paywall_viewed`, `paywall_skipped` | app; property `placement` says where: `onboarding`, `feature_gate`, or the app's own name | yes |
 | `sign_up` | app: an account was created (often after the paywall) | yes |
+| `sign_in` | app: someone signed in to an account they already had (a returning user) | yes |
 | `trial_started` | app | yes |
 | `purchase` | app; **must** carry `revenue: { amount: "49.99", currency: "USD" }` | yes |
 | `purchase_cancelled`, `purchase_failed` | app: the user closed the store sheet / the payment failed | yes |

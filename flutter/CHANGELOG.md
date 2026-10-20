@@ -1,3 +1,9 @@
+## 0.3.0
+
+* `signIn(method:)` when someone signs in to an account they already had, so the dashboard can tell returning users from new sign-ups (`signUp`).
+* iPhone: TestFlight and Xcode builds are test devices automatically (they carry a sandbox receipt).
+* Android: release builds installed by their developer (adb, Android Studio) are test devices automatically. Google Play testing tracks can't be told apart on the phone: pass `debug: true` in those builds.
+
 ## 0.2.1
 
 * iPhone: numbers 0 and 1 passed from Flutter (or React Native) were sent as false/true, so `onboardingStep(index: 0)` and `index: 1` were refused and their screens didn't show. They're sent as numbers now.

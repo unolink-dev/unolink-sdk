@@ -3,7 +3,7 @@ import type { EventSubscription } from "react-native"
 import Native from "./NativeRNUnolink"
 
 /** This package's version (sent with every install as the SDK version). */
-export const VERSION = "0.2.1"
+export const VERSION = "0.3.0"
 
 export type LogLevel = "none" | "error" | "warn" | "info" | "debug"
 
@@ -92,6 +92,11 @@ export const Unolink = {
   /** An account was created. */
   signUp(method?: string, properties?: Properties): void {
     Native.track("sign_up", withValue("method", method, properties))
+  },
+
+  /** Someone signed in to an account they already had (a returning user). Not for new accounts: those are `signUp`. */
+  signIn(method?: string, properties?: Properties): void {
+    Native.track("sign_in", withValue("method", method, properties))
   },
 
   /** A free trial started. Not needed when RevenueCat is connected to Unolink (it reports trials itself). */

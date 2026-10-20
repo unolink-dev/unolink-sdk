@@ -138,8 +138,13 @@ enum AppleDevice {
             appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
             deviceClass: tablet ? "tablet" : "phone",
             locale: Locale.preferredLanguages.first,
-            isDebug: debug)
+            // TestFlight (and Xcode) builds are never real users: test devices, whatever `debug` says.
+            isDebug: debug || isTestBuild(receiptName: Bundle.main.appStoreReceiptURL?.lastPathComponent))
     }
+
+    /// App Store installs carry a receipt named "receipt"; TestFlight and development builds a "sandboxReceipt". The
+    /// receipt API is deprecated but still answers, and it's the only synchronous way to tell (AppTransaction is async).
+    static func isTestBuild(receiptName: String?) -> Bool { receiptName == "sandboxReceipt" }
 }
 
 /// Foreground/background from UIKit's notifications. Background gets a short task so the last batch can go out.
