@@ -1,6 +1,9 @@
 // onboardingStep / onboardingSkipped reach the native SDK as `track` with only step, index and flow.
 const mockTrack = jest.fn()
-jest.mock("../src/NativeRNUnolink", () => ({ __esModule: true, default: { track: (...args: unknown[]) => mockTrack(...args) } }))
+jest.mock("../src/NativeRNUnolink", () => ({
+  __esModule: true,
+  default: { configure: () => {}, onDeferredDeepLink: () => ({ remove() {} }), track: (...args: unknown[]) => mockTrack(...args) },
+}))
 
 // A stand-in for React's useEffect: runs the effect when its dependencies change, like a re-render would.
 let mockLastDeps: unknown[] | undefined
@@ -13,6 +16,8 @@ jest.mock("react", () => ({
 }))
 
 import { Unolink, useOnboardingStep } from "../src"
+
+Unolink.configure("ulk_test")
 
 beforeEach(() => {
   mockTrack.mockClear()

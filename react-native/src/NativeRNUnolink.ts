@@ -20,4 +20,6 @@ export interface Spec extends TurboModule {
   readonly onDeferredDeepLink: CodegenTypes.EventEmitter<NativeDeepLink>
 }
 
-export default TurboModuleRegistry.getEnforcing<Spec>("RNUnolink")
+// get, not getEnforcing: without the native module (Expo Go, Jest, web, an over-the-air update to a build that
+// predates the SDK) this is null and the SDK does nothing, instead of crashing the app on import.
+export default TurboModuleRegistry.get<Spec>("RNUnolink")
