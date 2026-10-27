@@ -230,6 +230,8 @@ final class EngineTests: XCTestCase {
         h.engine.setUserId(nil)
         h.engine.track("a", properties: nil, revenue: nil)
         h.engine.flushNow()
+        // The install is registered again with "" (signed out), and events carry no user ID.
+        XCTAssertEqual(h.server.requests.last(where: { $0.path == "/v1/install" })!.json["userId"] as? String, "")
         XCTAssertNil(h.server.requests.last!.json["userId"])
     }
 }

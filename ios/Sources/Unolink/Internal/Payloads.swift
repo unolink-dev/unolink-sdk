@@ -85,7 +85,8 @@ enum Payloads {
         if let v = device.appVersion { body["appVersion"] = String(v.prefix(32)) }
         if let v = device.deviceClass { body["deviceClass"] = v }
         if let v = device.locale { body["locale"] = String(v.prefix(35)) }
-        if let u = userId { body["userId"] = u }
+        // "" (not left out) when there's no user: after setUserId(nil) the server then clears this install's current user.
+        body["userId"] = userId ?? ""
         return json(body)
     }
 

@@ -1,6 +1,6 @@
 {
   "name": "@unolink/react-native",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Unolink for React Native and Expo: which link or ad brings installs, onboarding, paywall views, trials and purchases.",
   "license": "MIT",
   "author": "Marin Capranov (Unolink)",
@@ -16,6 +16,7 @@
   "source": "src/index.ts",
   "files": [
     "src",
+    "jest.js",
     "ios",
     "android/build.gradle",
     "android/proguard-rules.pro",

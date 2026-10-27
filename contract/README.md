@@ -56,7 +56,9 @@ already-stored IDs count as duplicates.
 app user ID. It lets server-side purchase data (RevenueCat webhooks: renewals, cancellations, refunds) join the
 install that came from a link. **Unolink never stores it**: the server keeps only an HMAC-SHA256 of it under a
 per-app secret, and hashes webhook IDs the same way to match. Send it once known (and again if it changes); `null`
-or absent leaves the stored value unchanged.
+or absent leaves the stored value unchanged. On `/v1/install`, `""` means signed out: the install has no current user,
+while the IDs it reported before keep joining its purchases. The SDKs send `""` when no user ID is set (0.3.1 and
+later).
 
 ### `GET /v1/clicks/{clickId}`
 
