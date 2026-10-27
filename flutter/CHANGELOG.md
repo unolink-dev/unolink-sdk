@@ -1,3 +1,8 @@
+## 0.3.1
+
+* `setUserId(null)` now tells Unolink the user signed out: the install has no current user, and purchases from the IDs it reported before still count for it.
+* The dashboard keeps every user ID an install reported, so a guest who buys and then creates an account keeps the purchase and its renewals.
+
 ## 0.3.0
 
 * `signIn(method:)` when someone signs in to an account they already had, so the dashboard can tell returning users from new sign-ups (`signUp`).

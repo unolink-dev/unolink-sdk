@@ -104,9 +104,8 @@
         "string",
         "null"
       ],
-      "minLength": 1,
       "maxLength": 256,
-      "description": "The app's own user ID (e.g. RevenueCat app user ID). Stored only as a per-app HMAC."
+      "description": "The app's own user ID (e.g. RevenueCat app user ID). Stored only as a per-app HMAC. \"\" means signed out (no current user); null or absent leaves it unchanged."
     }
   }
 }

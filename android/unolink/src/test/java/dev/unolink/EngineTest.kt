@@ -298,6 +298,8 @@ class EngineTest {
         h.engine.setUserId(null)
         h.engine.track("a", null, null)
         h.engine.flushNow()
+        // The install is registered again with "" (signed out), and events carry no user ID.
+        assertEquals("", h.server.requests.last { it.path == "/v1/install" }.json.getString("userId"))
         assertTrue(!h.server.requests.last().json.has("userId"))
     }
 

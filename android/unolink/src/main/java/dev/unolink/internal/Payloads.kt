@@ -69,7 +69,8 @@ internal object Payloads {
 
     fun install(installId: String, device: DeviceInfo, referrer: ReferrerDetails?, userId: String?): String = JSONObject().apply {
         put("installId", installId)
-        userId?.let { put("userId", it) }
+        // "" (not left out) when there's no user: after setUserId(null) the server then clears this install's current user.
+        put("userId", userId ?: "")
         put("platform", device.platform)
         put("sdk", JSONObject().put("name", device.sdkName).put("version", device.sdkVersion))
         device.osVersion?.let { put("osVersion", it.take(32)) }
