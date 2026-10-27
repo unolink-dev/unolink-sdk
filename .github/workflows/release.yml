@@ -39,7 +39,9 @@ jobs:
           check android/unolink/src/main/java/dev/unolink/Unolink.kt "$(sed -n 's/.*const val VERSION: String = "\(.*\)".*/\1/p' android/unolink/src/main/java/dev/unolink/Unolink.kt)"
           check ios/Sources/Unolink/Unolink.swift "$(sed -n 's/.*public static let version = "\(.*\)".*/\1/p' ios/Sources/Unolink/Unolink.swift)"
           check react-native/package.json "$(node -p 'require("./react-native/package.json").version')"
-          check react-native/src/index.ts "$(sed -n 's/^export const VERSION = "\(.*\)".*/\1/p' react-native/src/index.ts)"
+          # React Native reads its VERSION from package.json (checked above), so it can't drift.
+          grep -q '^export const VERSION: string = pkg.version' react-native/src/index.ts \
+            || { echo "::error file=react-native/src/index.ts::VERSION should be read from package.json"; bad=1; }
           check flutter/pubspec.yaml "$(sed -n 's/^version: //p' flutter/pubspec.yaml)"
           check flutter/lib/unolink.dart "$(sed -n "s/.*static const String version = '\(.*\)'.*/\1/p" flutter/lib/unolink.dart)"
           check flutter/android/build.gradle "$(sed -n 's/^version = "\(.*\)".*/\1/p' flutter/android/build.gradle)"
