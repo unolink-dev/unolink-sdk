@@ -1,3 +1,8 @@
+## 0.3.2
+
+* `signUpSkipped()` when someone continues as a guest instead of creating an account (it was `track('sign_up_skipped')`).
+* `connectRevenueCat(...)` keeps the user ID equal to RevenueCat's app user ID: read once configured, on every customer info update (purchases, `logIn`, `logOut`) and when the app resumes, sent only when it changed. A guest's purchase under RevenueCat's anonymous ID now joins the install without any `setUserId` code. No dependency on RevenueCat: you pass its functions.
+
 ## 0.3.1
 
 * `setUserId(null)` now tells Unolink the user signed out: the install has no current user, and purchases from the IDs it reported before still count for it.

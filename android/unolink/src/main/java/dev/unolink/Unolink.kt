@@ -14,6 +14,7 @@ import dev.unolink.internal.HttpTransport
 import dev.unolink.internal.LogcatLogger
 import dev.unolink.internal.Payloads
 import dev.unolink.internal.PlayInstallReferrer
+import dev.unolink.internal.RevenueCatLink
 import dev.unolink.internal.ReferrerDetails
 import dev.unolink.internal.SystemClock
 import dev.unolink.internal.mainHandler
@@ -33,9 +34,11 @@ import java.math.BigDecimal
  */
 public object Unolink {
     /** This SDK's version. */
-    public const val VERSION: String = "0.3.1"
+    public const val VERSION: String = "0.3.2"
 
-    @Volatile private var engine: Engine? = null
+    /** Internal (not private) so tests can run the public API over a test engine. */
+    @Volatile internal var engine: Engine? = null
+    internal val revenueCat = RevenueCatLink()
     @Volatile private var pendingListener: DeferredDeepLinkListener? = null
 
     /**
@@ -81,6 +84,8 @@ public object Unolink {
             )
             engine = created
             pendingListener?.let(created::setListener)
+            // Before start, so a first launch registers the install with RevenueCat's ID straight away.
+            revenueCat.changedId()?.let(created::setUserId)
 
             // The referrer only matters until the install is registered; it's read on the first launch.
             val needsReferrer = firstLaunch || !store.getBoolean(Engine.KEY_REGISTERED)
@@ -97,7 +102,10 @@ public object Unolink {
 
             mainHandler.post {
                 ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
-                    override fun onStart(owner: LifecycleOwner) = created.onForeground()
+                    override fun onStart(owner: LifecycleOwner) {
+                        created.onForeground()
+                        syncRevenueCat()
+                    }
                     override fun onStop(owner: LifecycleOwner) = created.onBackground()
                 })
             }
@@ -167,6 +175,13 @@ public object Unolink {
         withEngine { it.track("sign_in", withValue("method", method, properties), null) }
     }
 
+    /** The user chose to continue without an account (guest mode) on a sign-up screen. Not a drop-off. */
+    @JvmStatic
+    @JvmOverloads
+    public fun signUpSkipped(properties: Map<String, Any?>? = null) {
+        withEngine { it.track("sign_up_skipped", properties, null) }
+    }
+
     /** The user closed the store's purchase sheet without paying. */
     @JvmStatic
     @JvmOverloads
@@ -182,9 +197,10 @@ public object Unolink {
     }
 
     /**
-     * Your app's own ID for the signed-in (or anonymous) user, e.g. the RevenueCat app user ID. It lets Unolink join
-     * server-side purchase data (renewals, cancellations, refunds) to the link the install came from. Unolink stores only
-     * a keyed hash of it, never the ID itself. Pass null on sign-out.
+     * Your app's own ID for the signed-in (or anonymous) user: RevenueCat's app user ID
+     * (`Purchases.sharedInstance.appUserID`, also while it's anonymous) if you use RevenueCat, or let [connectRevenueCat]
+     * do it. It lets Unolink join server-side purchase data (renewals, cancellations, refunds) to the link the install
+     * came from. Unolink stores only a keyed hash of it, never the ID itself. Pass null on sign-out.
      */
     @JvmStatic
     public fun setUserId(userId: String?) {
@@ -213,6 +229,41 @@ public object Unolink {
                 else -> engine.track("purchase", withProduct(productId, properties), value to currency)
             }
         }
+    }
+
+    /**
+     * Keeps the user ID equal to RevenueCat's app user ID, so RevenueCat purchases (a guest's too) join this install.
+     * Unolink doesn't depend on RevenueCat: pass a provider that reads the ID. It's read at [configure], whenever the app
+     * comes to the foreground and before each event, and reported only when it changed. Null or an exception (RevenueCat
+     * not configured yet) is skipped:
+     *
+     * ```kotlin
+     * Unolink.connectRevenueCat { Purchases.sharedInstance.appUserID }
+     * ```
+     *
+     * Call it once, before or after [configure]. After `Purchases.sharedInstance.logIn` / `logOut`, call
+     * [revenueCatUserChanged] to report the new ID at once (otherwise it goes with the next event). Use this or
+     * [setUserId], not both.
+     */
+    @JvmStatic
+    public fun connectRevenueCat(appUserId: AppUserIdProvider) {
+        revenueCat.connect(appUserId)
+        syncRevenueCat()
+    }
+
+    /** Stops reading RevenueCat's app user ID. The last reported ID stays until [setUserId] changes it. */
+    @JvmStatic
+    public fun disconnectRevenueCat() {
+        revenueCat.disconnect()
+    }
+
+    /**
+     * Reads RevenueCat's app user ID now and reports it if it changed: call it after `logIn` or `logOut`. Does nothing
+     * without [connectRevenueCat].
+     */
+    @JvmStatic
+    public fun revenueCatUserChanged() {
+        syncRevenueCat()
     }
 
     /**
@@ -256,9 +307,19 @@ public object Unolink {
     private fun withValue(key: String, value: String?, properties: Map<String, Any?>?): Map<String, Any?>? =
         if (value == null) properties else (properties.orEmpty() + (key to value))
 
+    /** Reports RevenueCat's app user ID if [connectRevenueCat] is on and the ID changed. Before configure it waits. */
+    internal fun syncRevenueCat() {
+        val e = engine ?: return
+        revenueCat.changedId()?.let(e::setUserId)
+    }
+
     private inline fun withEngine(block: (Engine) -> Unit) {
         val e = engine
-        if (e == null) Log.w("Unolink", "Call Unolink.configure(...) in Application.onCreate first; event ignored.")
-        else block(e)
+        if (e == null) {
+            Log.w("Unolink", "Call Unolink.configure(...) in Application.onCreate first; event ignored.")
+            return
+        }
+        revenueCat.changedId()?.let(e::setUserId)
+        block(e)
     }
 }

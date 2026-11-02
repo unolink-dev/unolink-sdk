@@ -24,3 +24,9 @@ test("deferred links behave like the real package", () => {
   Unolink.consumeDeferredDeepLink()
   expect(Unolink.getPendingDeferredDeepLink()).toBeNull()
 })
+
+test("connectRevenueCat returns a disconnect function", () => {
+  const disconnect = Unolink.connectRevenueCat({ getAppUserID: async () => "id" })
+  expect(typeof disconnect).toBe("function")
+  expect(Unolink.connectRevenueCat).toHaveBeenCalled()
+})

@@ -5,6 +5,8 @@ jest.mock("../src/NativeRNUnolink", () => ({
   default: { configure: () => {}, onDeferredDeepLink: () => ({ remove() {} }), track: (...args: unknown[]) => mockTrack(...args) },
 }))
 
+jest.mock("react-native", () => ({ AppState: { addEventListener: () => ({ remove() {} }) } }))
+
 // A stand-in for React's useEffect: runs the effect when its dependencies change, like a re-render would.
 let mockLastDeps: unknown[] | undefined
 jest.mock("react", () => ({

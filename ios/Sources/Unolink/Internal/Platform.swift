@@ -151,16 +151,21 @@ enum AppleDevice {
 final class Lifecycle {
     private var tokens: [NSObjectProtocol] = []
 
-    init(engine: Engine) {
+    /// `onActive` also runs whenever the app becomes active (on the posting thread).
+    init(engine: Engine, onActive: @escaping () -> Void = {}) {
         #if canImport(UIKit) && !os(watchOS)
         // configure() often runs after the app is already active (React Native and Flutter call it from their own
         // code a moment after launch), so the first didBecomeActive is missed: catch up with the current state.
         DispatchQueue.main.async {
-            if UIApplication.shared.applicationState == .active { engine.onForeground() }
+            if UIApplication.shared.applicationState == .active {
+                engine.onForeground()
+                onActive()
+            }
         }
         let center = NotificationCenter.default
         tokens.append(center.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: nil) { _ in
             engine.onForeground()
+            onActive()
         })
         tokens.append(center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { _ in
             var task = UIBackgroundTaskIdentifier.invalid

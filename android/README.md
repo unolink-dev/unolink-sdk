@@ -5,7 +5,7 @@ Kotlin, callable from Java. minSdk 23. Dependencies: Google's Play Install Refer
 
 ```kotlin
 // build.gradle.kts
-implementation("dev.unolink:unolink:0.3.1")
+implementation("dev.unolink:unolink:0.3.2")
 ```
 
 ```kotlin
@@ -22,6 +22,10 @@ Unolink.onboardingSkipped("goal")
 Unolink.onboardingCompleted()
 Unolink.paywallViewed()
 Unolink.paywallSkipped()
+Unolink.signUp("google")                                 // a new account
+Unolink.signIn("google")                                 // a returning user signed in
+Unolink.signUpSkipped()                                  // continued as a guest
+Unolink.connectRevenueCat { Purchases.sharedInstance.appUserID }   // see RevenueCat below
 Unolink.trialStarted(productId = "pro_yearly")
 Unolink.purchase(BigDecimal("49.99"), "USD", productId = "pro_yearly")
 Unolink.track("level_up", mapOf("level" to 3))
@@ -30,6 +34,25 @@ Unolink.track("level_up", mapOf("level" to 3))
 Onboarding: call `onboardingStep` when each screen appears (not from its button), `onboardingSkipped` on Skip, then
 `onboardingCompleted`. The dashboard shows which screen people leave on. Step events are free. Screen IDs are fixed
 names such as `goal`, never user data.
+
+## RevenueCat
+
+Unolink joins RevenueCat's purchases, renewals and refunds to the install by RevenueCat's app user ID. Let the SDK keep
+it current (0.3.2+; no dependency on RevenueCat, you pass a lambda that reads the ID):
+
+```kotlin
+Unolink.connectRevenueCat { Purchases.sharedInstance.appUserID }
+```
+
+Call it once, before or after `configure` (e.g. in `Application.onCreate`). The ID is read at `configure`, whenever the
+app comes to the foreground and before each event, and sent only when it changed, so a guest's purchase under
+RevenueCat's anonymous ID counts too. If RevenueCat isn't configured yet, the read fails quietly and is tried again.
+After `logIn` / `logOut`, call `Unolink.revenueCatUserChanged()` to send the new ID at once.
+
+Without it: `Unolink.setUserId(Purchases.sharedInstance.appUserID)` after configuring RevenueCat, after every `logIn` /
+`logOut`, and on every launch. Use one or the other. Unolink stores only a keyed hash of the ID.
+
+Java: `Unolink.connectRevenueCat(() -> Purchases.getSharedInstance().getAppUserID())`.
 
 Java: `Unolink.configure(this, "ulk_…")`, `Unolink.purchase(new BigDecimal("49.99"), "USD")`, and so on.
 
