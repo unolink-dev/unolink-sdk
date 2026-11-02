@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import type { EventSubscription } from "react-native"
+import { AppState, type EventSubscription } from "react-native"
 import Native, { type NativeDeepLink } from "./NativeRNUnolink"
 import { eventProblems, MAX_USER_ID_LENGTH, onboardingProblems, type Properties } from "./rules"
 import pkg from "../package.json"
@@ -96,6 +96,70 @@ function call(run: (native: NativeModule) => void): void {
 function track(name: string, properties: Properties | null): void {
   if (isDev) for (const problem of eventProblems(name, properties)) warnOnce(`${problem} The server will reject or trim it.`)
   call((n) => n.track(name, properties))
+}
+
+/**
+ * The parts of react-native-purchases' `Purchases` that `connectRevenueCat` uses. Pass `Purchases` itself: Unolink
+ * doesn't depend on RevenueCat, so apps without it don't install it.
+ */
+export type RevenueCatPurchases = {
+  getAppUserID(): Promise<string>
+  addCustomerInfoUpdateListener?(listener: (customerInfo: unknown) => void): void
+  removeCustomerInfoUpdateListener?(listener: (customerInfo: unknown) => void): unknown
+}
+
+type RevenueCatLink = { check(): Promise<void>; disconnect(): void }
+let revenueCat: RevenueCatLink | null = null
+
+function linkRevenueCat(purchases: RevenueCatPurchases): RevenueCatLink {
+  let reported: string | null = null
+  let reads = 0
+  let disconnected = false
+  let appState: { remove(): void } | null = null
+
+  async function check(): Promise<void> {
+    if (disconnected) return
+    const read = ++reads
+    let id: string | null | undefined
+    try {
+      id = await purchases.getAppUserID()
+    } catch {
+      return // RevenueCat isn't configured yet: read again on the next update or when the app comes back.
+    }
+    // A newer read wins: answers can come back out of order.
+    if (disconnected || read !== reads || typeof id !== "string") return
+    id = id.trim()
+    if (!id || id.length > MAX_USER_ID_LENGTH || id === reported) return
+    reported = id
+    Unolink.setUserId(id)
+  }
+
+  const onCustomerInfo = () => void check()
+  try {
+    purchases.addCustomerInfoUpdateListener?.(onCustomerInfo)
+  } catch (e) {
+    warnOnce(`connectRevenueCat: couldn't listen for customer info updates: ${String(e)}`, true)
+  }
+  try {
+    appState = AppState.addEventListener("change", (state) => {
+      if (state === "active") void check()
+    })
+  } catch {
+    appState = null
+  }
+
+  return {
+    check,
+    disconnect() {
+      if (disconnected) return
+      disconnected = true
+      try {
+        purchases.removeCustomerInfoUpdateListener?.(onCustomerInfo)
+      } catch {}
+      appState?.remove()
+      appState = null
+    },
+  }
 }
 
 // Deferred deep links. The native SDK delivers the link once, as soon as it's known (on Android that can be before
@@ -243,13 +307,44 @@ export const Unolink = {
   },
 
   /**
-   * Your app's user ID, e.g. the ID you pass to RevenueCat's Purchases.logIn, so RevenueCat purchases join this install.
-   * Unolink stores only a keyed hash of it. Pass null on sign-out.
+   * Your app's user ID: RevenueCat's app user ID (`await Purchases.getAppUserID()`, also while it's anonymous) if you
+   * use RevenueCat, or let connectRevenueCat do it, so RevenueCat purchases join this install. Unolink stores only a
+   * keyed hash of it. Pass null on sign-out.
    */
   setUserId(userId: string | null): void {
     if (userId != null && userId.trim().length > MAX_USER_ID_LENGTH)
       warnOnce(`setUserId: the ID is over ${MAX_USER_ID_LENGTH} characters and is ignored.`, true)
     call((n) => n.setUserId(userId))
+  },
+
+  /**
+   * Keeps the user ID equal to RevenueCat's app user ID, so RevenueCat purchases (a guest's too) join this install:
+   * `Unolink.connectRevenueCat(Purchases)` with react-native-purchases' `Purchases`. Reads `Purchases.getAppUserID()`
+   * now, on every customer info update (purchases, logIn, logOut) and whenever the app comes back to the foreground,
+   * and reports it only when it changed. Errors (RevenueCat not configured yet) are ignored and it's read again later.
+   * Call it once, before or after configure. Returns a function that disconnects. Use this or setUserId, not both.
+   */
+  connectRevenueCat(purchases: RevenueCatPurchases): () => void {
+    revenueCat?.disconnect()
+    if (!purchases || typeof purchases.getAppUserID !== "function") {
+      warnOnce("connectRevenueCat needs react-native-purchases' Purchases (it has getAppUserID).", true)
+      return () => {}
+    }
+    const link = linkRevenueCat(purchases)
+    revenueCat = link
+    void link.check()
+    return () => {
+      link.disconnect()
+      if (revenueCat === link) revenueCat = null
+    }
+  },
+
+  /**
+   * Reads RevenueCat's app user ID now and reports it if it changed. Normally not needed: connectRevenueCat already
+   * listens for customer info updates. Does nothing without it.
+   */
+  async revenueCatUserChanged(): Promise<void> {
+    await revenueCat?.check()
   },
 
   /** The random ID of this install (null before configure, or without the native module). It identifies no person or device. */

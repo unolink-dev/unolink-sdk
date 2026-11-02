@@ -5,6 +5,7 @@
 library;
 
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 /// Where to take someone who just installed from a Unolink link (Android; iPhone only when attributed with certainty).
 class UnolinkDeepLink {
@@ -35,11 +36,13 @@ class Unolink {
   Unolink._();
 
   /// This package's version (sent with every install as the SDK version).
-  static const String version = '0.3.1';
+  static const String version = '0.3.2';
 
   static const MethodChannel _channel = MethodChannel('dev.unolink/sdk');
   static void Function(UnolinkDeepLink link)? _deepLinkListener;
   static UnolinkDeepLink? _pendingDeepLink;
+  static bool _configured = false;
+  static _RevenueCatLink? _revenueCat;
 
   /// Call once, as early as possible (e.g. in main() after WidgetsFlutterBinding.ensureInitialized()).
   ///
@@ -64,6 +67,9 @@ class Unolink {
       'debug': debug,
       'sdkVersion': version,
     });
+    _configured = true;
+    // connectRevenueCat may have come first: its ID is reported now.
+    _revenueCat?.check();
   }
 
   /// Your own event, e.g. track('level_up', {'level': 3}). Values: strings, numbers or booleans.
@@ -99,6 +105,9 @@ class Unolink {
   static Future<void> signIn({String? method, Map<String, Object>? properties}) =>
       track('sign_in', _with('method', method, properties));
 
+  /// The user chose to continue without an account (guest mode) on a sign-up screen. Not a drop-off.
+  static Future<void> signUpSkipped([Map<String, Object>? properties]) => track('sign_up_skipped', properties);
+
   /// A free trial started. Not needed when RevenueCat is connected to Unolink.
   static Future<void> trialStarted({String? productId, Map<String, Object>? properties}) =>
       track('trial_started', _with('product_id', productId, properties));
@@ -116,9 +125,44 @@ class Unolink {
   static Future<void> purchaseFailed({String? productId, String? reason, Map<String, Object>? properties}) =>
       track('purchase_failed', _with('reason', reason, _with('product_id', productId, properties)));
 
-  /// Your app's user ID, e.g. the ID you pass to RevenueCat's Purchases.logIn, so RevenueCat purchases join this
-  /// install. Unolink stores only a keyed hash of it. Pass null on sign-out.
+  /// Your app's user ID: RevenueCat's app user ID (`await Purchases.appUserID`, also while it's anonymous) if you use
+  /// RevenueCat, or let [connectRevenueCat] do it, so RevenueCat purchases join this install. Unolink stores only a
+  /// keyed hash of it. Pass null on sign-out.
   static Future<void> setUserId(String? userId) => _invoke('setUserId', {'userId': userId});
+
+  /// Keeps the user ID equal to RevenueCat's app user ID, so RevenueCat purchases (a guest's too) join this install.
+  /// Unolink doesn't depend on RevenueCat: pass its functions.
+  ///
+  /// ```dart
+  /// Unolink.connectRevenueCat(
+  ///   () => Purchases.appUserID,
+  ///   addListener: Purchases.addCustomerInfoUpdateListener,
+  ///   removeListener: Purchases.removeCustomerInfoUpdateListener,
+  /// );
+  /// ```
+  ///
+  /// The ID is read now (or once [configure] has run), on every customer info update (purchases, logIn, logOut) and
+  /// whenever the app resumes, and reported only when it changed. Errors (RevenueCat not configured yet) are ignored
+  /// and it's read again later. Call it once, before or after [configure]; it returns a function that disconnects. Use
+  /// this or [setUserId], not both.
+  static void Function() connectRevenueCat(
+    Future<String?> Function() appUserId, {
+    void Function(void Function(Object?) listener)? addListener,
+    void Function(void Function(Object?) listener)? removeListener,
+  }) {
+    _revenueCat?.disconnect();
+    final link = _RevenueCatLink(appUserId, addListener, removeListener);
+    _revenueCat = link;
+    link.check();
+    return () {
+      link.disconnect();
+      if (identical(_revenueCat, link)) _revenueCat = null;
+    };
+  }
+
+  /// Reads RevenueCat's app user ID now and reports it if it changed. Normally not needed: [connectRevenueCat] already
+  /// listens for customer info updates. Does nothing without it.
+  static Future<void> revenueCatUserChanged() async => _revenueCat?.check();
 
   /// The random ID of this install (null before configure). It identifies no person or device.
   static Future<String?> getInstallId() async {
@@ -162,5 +206,56 @@ class Unolink {
     } on PlatformException {
       // The native SDK never throws; ignore anything unexpected rather than crash the app.
     }
+  }
+}
+
+/// connectRevenueCat's state: what was last reported, the listener, and the app-resume hook.
+class _RevenueCatLink {
+  _RevenueCatLink(this._appUserId, void Function(void Function(Object?))? addListener, this._removeListener) {
+    try {
+      addListener?.call(_onCustomerInfo);
+    } catch (_) {}
+    try {
+      _lifecycle = AppLifecycleListener(onResume: check);
+    } catch (_) {
+      // No Flutter binding yet: updates and the next launch still keep the ID current.
+    }
+  }
+
+  static const int _maxUserId = 256;
+
+  final Future<String?> Function() _appUserId;
+  final void Function(void Function(Object?))? _removeListener;
+  AppLifecycleListener? _lifecycle;
+  String? _reported;
+  int _reads = 0;
+  bool _disconnected = false;
+
+  void _onCustomerInfo(Object? _) => check();
+
+  Future<void> check() async {
+    if (_disconnected || !Unolink._configured) return;
+    final read = ++_reads;
+    String? id;
+    try {
+      id = (await _appUserId())?.trim();
+    } catch (_) {
+      return; // RevenueCat not configured yet: read again on the next update or resume.
+    }
+    // A newer read wins: answers can come back out of order.
+    if (_disconnected || read != _reads) return;
+    if (id == null || id.isEmpty || id.length > _maxUserId || id == _reported) return;
+    _reported = id;
+    await Unolink.setUserId(id);
+  }
+
+  void disconnect() {
+    if (_disconnected) return;
+    _disconnected = true;
+    try {
+      _removeListener?.call(_onCustomerInfo);
+    } catch (_) {}
+    _lifecycle?.dispose();
+    _lifecycle = null;
   }
 }

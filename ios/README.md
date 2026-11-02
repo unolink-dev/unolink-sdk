@@ -27,7 +27,8 @@ Unolink.paywallViewed(placement: "onboarding")
 Unolink.paywallSkipped(placement: "onboarding")
 Unolink.signUp(method: "apple")                // a new account
 Unolink.signIn(method: "apple")                // a returning user signed in
-Unolink.setUserId(revenueCatAppUserId)            // stored by Unolink only as a keyed hash
+Unolink.signUpSkipped()                        // continued as a guest
+Unolink.connectRevenueCat { Purchases.isConfigured ? Purchases.shared.appUserID : nil }   // see RevenueCat below
 Unolink.trialStarted(productId: "pro_yearly")
 Unolink.purchase(amount: product.price, currency: "USD", productId: product.id)   // amount: Decimal
 Unolink.purchaseCancelled(productId: product.id)
@@ -37,6 +38,23 @@ Unolink.track("level_up", properties: ["level": 3])
 Onboarding: call `onboardingStep` when each screen appears (not from its button), `onboardingSkipped` on Skip, then
 `onboardingCompleted`. The dashboard shows which screen people leave on. Step events are free. Screen IDs are fixed
 names such as `goal`, never user data.
+
+## RevenueCat
+
+Unolink joins RevenueCat's purchases, renewals and refunds to the install by RevenueCat's app user ID. Let the SDK keep
+it current (0.3.2+; no dependency on RevenueCat, you pass a closure that reads the ID):
+
+```swift
+Unolink.connectRevenueCat { Purchases.isConfigured ? Purchases.shared.appUserID : nil }
+```
+
+Call it once, before or after `configure`. The ID is read at `configure`, whenever the app becomes active and before
+each event, and sent only when it changed, so a guest's purchase under RevenueCat's anonymous ID counts too. After
+`Purchases.shared.logIn` / `logOut`, call `Unolink.revenueCatUserChanged()` to send the new ID at once. Return nil
+while RevenueCat isn't configured (reading `Purchases.shared` before that stops the app).
+
+Without it: `Unolink.setUserId(Purchases.shared.appUserID)` after configuring RevenueCat, after every `logIn` /
+`logOut`, and on every launch. Use one or the other. Unolink stores only a keyed hash of the ID.
 
 Objective-C: `[Unolink configureWithApiKey:@"ulk_…" options:[UNLOptions new]];`,
 `[Unolink paywallViewedWithPlacement:@"onboarding" properties:nil];`,

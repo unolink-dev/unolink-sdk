@@ -40,6 +40,8 @@ const Unolink = {
   purchaseCancelled: fn("purchaseCancelled"),
   purchaseFailed: fn("purchaseFailed"),
   setUserId: fn("setUserId"),
+  connectRevenueCat: fn("connectRevenueCat", () => () => undefined),
+  revenueCatUserChanged: fn("revenueCatUserChanged", () => Promise.resolve()),
   getInstallId: fn("getInstallId", () => (configured ? "00000000-0000-4000-8000-000000000000" : null)),
   flush: fn("flush"),
   setEnabled: fn("setEnabled"),

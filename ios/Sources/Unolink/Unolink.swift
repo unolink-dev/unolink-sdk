@@ -13,10 +13,12 @@ import Foundation
 @objc(Unolink)
 public final class Unolink: NSObject {
     /// This SDK's version.
-    @objc(sdkVersion) public static let version = "0.3.1"
+    @objc(sdkVersion) public static let version = "0.3.2"
 
     private static let lock = NSLock()
-    private static var engine: Engine?
+    /// Internal (not private) so tests can run the public API over a test engine.
+    static var engine: Engine?
+    static let revenueCat = RevenueCatLink()
     private static var lifecycle: Lifecycle?
     private static var pendingHandler: ((UnolinkDeepLink) -> Void)?
 
@@ -53,7 +55,9 @@ public final class Unolink: NSObject {
             runOnMain: { block in DispatchQueue.main.async(execute: block) })
         engine = created
         if let handler = pendingHandler { created.setListener(handler) }
-        lifecycle = Lifecycle(engine: created)
+        // Before start, so a first launch registers the install with RevenueCat's ID straight away.
+        if let id = revenueCat.changedId() { created.setUserId(id) }
+        lifecycle = Lifecycle(engine: created, onActive: { syncRevenueCat() })
         created.start()
     }
 
@@ -119,6 +123,12 @@ public final class Unolink: NSObject {
         withEngine { $0.track("sign_in", properties: with("method", method, properties), revenue: nil) }
     }
 
+    /// The user chose to continue without an account (guest mode) on a sign-up screen. Not a drop-off.
+    @objc(signUpSkippedWithProperties:)
+    public static func signUpSkipped(properties: [String: Any]? = nil) {
+        withEngine { $0.track("sign_up_skipped", properties: properties, revenue: nil) }
+    }
+
     /// A free trial started.
     @objc(trialStartedWithProductId:properties:)
     public static func trialStarted(productId: String? = nil, properties: [String: Any]? = nil) {
@@ -158,11 +168,40 @@ public final class Unolink: NSObject {
         withEngine { $0.track("purchase_failed", properties: with("reason", reason, with("product_id", productId, properties)), revenue: nil) }
     }
 
-    /// Your app's own ID for the user, e.g. the RevenueCat app user ID. Lets Unolink join server-side purchase data
-    /// (renewals, cancellations, refunds) to the install. Unolink stores only a keyed hash of it. Pass nil on sign-out.
+    /// Your app's own ID for the user: RevenueCat's app user ID (`Purchases.shared.appUserID`, also while it's anonymous)
+    /// if you use RevenueCat, or let `connectRevenueCat` do it. Lets Unolink join server-side purchase data (renewals,
+    /// cancellations, refunds) to the install. Unolink stores only a keyed hash of it. Pass nil on sign-out.
     @objc(setUserId:)
     public static func setUserId(_ userId: String?) {
         withEngine { $0.setUserId(userId) }
+    }
+
+    /// Keeps the user ID equal to RevenueCat's app user ID, so RevenueCat purchases (a guest's too) join this install.
+    /// Unolink doesn't depend on RevenueCat: pass a closure that reads the ID. It's read at `configure`, whenever the app
+    /// becomes active and before each event, and reported only when it changed. Return nil while it isn't known:
+    ///
+    /// ```swift
+    /// Unolink.connectRevenueCat { Purchases.isConfigured ? Purchases.shared.appUserID : nil }
+    /// ```
+    ///
+    /// Call it once, before or after `configure`. After `Purchases.shared.logIn` / `logOut`, call
+    /// `revenueCatUserChanged()` to report the new ID at once (otherwise it goes with the next event). Use this or
+    /// `setUserId`, not both.
+    @objc(connectRevenueCat:)
+    public static func connectRevenueCat(_ appUserId: @escaping () -> String?) {
+        revenueCat.connect(appUserId)
+        syncRevenueCat()
+    }
+
+    /// Stops reading RevenueCat's app user ID. The last reported ID stays until `setUserId` changes it.
+    @objc public static func disconnectRevenueCat() {
+        revenueCat.disconnect()
+    }
+
+    /// Reads RevenueCat's app user ID now and reports it if it changed: call it after `Purchases.shared.logIn` or
+    /// `logOut`. Does nothing without `connectRevenueCat`.
+    @objc public static func revenueCatUserChanged() {
+        syncRevenueCat()
     }
 
     /// Called once per install, on the main thread, when the install was attributed to a Unolink link with certainty.
@@ -209,6 +248,16 @@ public final class Unolink: NSObject {
         return out
     }
 
+    /// Reports RevenueCat's app user ID if `connectRevenueCat` is on and the ID changed. Before configure it waits:
+    /// configure reports it.
+    static func syncRevenueCat() {
+        lock.lock()
+        let e = engine
+        lock.unlock()
+        guard let engine = e, let id = revenueCat.changedId() else { return }
+        engine.setUserId(id)
+    }
+
     private static func withEngine(_ block: (Engine) -> Void) {
         lock.lock()
         let e = engine
@@ -217,6 +266,7 @@ public final class Unolink: NSObject {
             ConsoleLogger(level: .warn).warn("Call Unolink.configure(apiKey:) at app launch first; event ignored.")
             return
         }
+        if let id = revenueCat.changedId() { engine.setUserId(id) }
         block(engine)
     }
 }

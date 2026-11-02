@@ -53,4 +53,17 @@ void main() {
       'properties': {'method': 'apple'},
     });
   });
+
+  test('signUpSkipped sends sign_up_skipped', () async {
+    await Unolink.signUpSkipped({'screen': 'welcome'});
+    expect(calls.single.arguments, {
+      'name': 'sign_up_skipped',
+      'properties': {'screen': 'welcome'},
+    });
+  });
+
+  test('signUpSkipped without properties', () async {
+    await Unolink.signUpSkipped();
+    expect(calls.single.arguments, {'name': 'sign_up_skipped', 'properties': null});
+  });
 }

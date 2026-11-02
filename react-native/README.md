@@ -22,7 +22,7 @@ Unolink.paywallSkipped("onboarding")                   // closed without buying:
 Unolink.signUp("apple")                                 // a new account
 Unolink.signIn("apple")                                 // a returning user signed in
 Unolink.signUpSkipped()                                 // continued as a guest
-Unolink.setUserId(revenueCatAppUserId)                  // the ID you pass to Purchases.logIn
+Unolink.connectRevenueCat(Purchases)                    // RevenueCat's user ID, kept current (see below)
 Unolink.purchase("49.99", "USD", "pro_yearly")          // not needed if RevenueCat is connected to Unolink
 Unolink.track("level_up", { level: 3 })
 ```
@@ -30,6 +30,24 @@ Unolink.track("level_up", { level: 3 })
 Calls never throw. Calls made before `configure` wait and are sent right after it, so restoring a session first is
 fine. Without the native module (Expo Go, Jest, web) every call does nothing. `Unolink.isConfigured()` says whether it's
 running.
+
+## RevenueCat
+
+Unolink joins RevenueCat's purchases, renewals and refunds to the install by RevenueCat's app user ID. Let the SDK keep
+it current (0.3.2+; no dependency on react-native-purchases, you pass its `Purchases`):
+
+```ts
+import Purchases from "react-native-purchases"
+
+Unolink.connectRevenueCat(Purchases)   // once, before or after configure; returns a function that disconnects
+```
+
+The ID (`Purchases.getAppUserID()`) is read now, on every customer info update (purchases, `logIn`, `logOut`) and
+whenever the app comes back to the foreground, and sent only when it changed, so a guest's purchase under RevenueCat's
+anonymous ID counts too. If RevenueCat isn't configured yet, the read fails quietly and is tried again.
+
+Without it: `Unolink.setUserId(await Purchases.getAppUserID())` after configuring RevenueCat, after every `logIn` /
+`logOut`, and on every launch. Use one or the other. Unolink stores only a keyed hash of the ID.
 
 ## Deferred deep links (Android)
 

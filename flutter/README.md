@@ -4,7 +4,7 @@ Unolink for Flutter. A thin layer over the native Unolink iOS and Android SDKs, 
 
 ```yaml
 dependencies:
-  unolink: ^0.1.0
+  unolink: ^0.3.2
 ```
 
 ```dart
@@ -25,7 +25,7 @@ Unolink.paywallViewed(placement: 'onboarding');
 Unolink.paywallSkipped(placement: 'onboarding');
 Unolink.signUp(method: 'apple');               // a new account
 Unolink.signIn(method: 'apple');               // a returning user signed in
-Unolink.setUserId(revenueCatAppUserId);                  // the ID you pass to Purchases.logIn
+Unolink.signUpSkipped();                       // continued as a guest
 Unolink.purchase('49.99', 'USD', productId: 'pro_yearly'); // not needed if RevenueCat is connected to Unolink
 Unolink.track('level_up', {'level': 3});
 ```
@@ -33,6 +33,26 @@ Unolink.track('level_up', {'level': 3});
 Onboarding: call `onboardingStep` when each screen appears (not from its button), `onboardingSkipped` on Skip, then
 `onboardingCompleted`. The dashboard shows which screen people leave on. Step events are free. Screen IDs are fixed
 names such as `goal`, never user data.
+
+## RevenueCat
+
+Unolink joins RevenueCat's purchases, renewals and refunds to the install by RevenueCat's app user ID. Let the SDK keep
+it current (0.3.2+; no dependency on RevenueCat, you pass its functions):
+
+```dart
+Unolink.connectRevenueCat(
+  () => Purchases.appUserID,
+  addListener: Purchases.addCustomerInfoUpdateListener,
+  removeListener: Purchases.removeCustomerInfoUpdateListener,
+);
+```
+
+Call it once, before or after `configure`. The ID is read once configured, on every customer info update (purchases,
+`logIn`, `logOut`) and whenever the app resumes, and sent only when it changed, so a guest's purchase under RevenueCat's
+anonymous ID counts too. It returns a function that disconnects.
+
+Without it: `Unolink.setUserId(await Purchases.appUserID)` after configuring RevenueCat, after every `logIn` / `logOut`,
+and on every launch. Use one or the other. Unolink stores only a keyed hash of the ID.
 
 No extra setup on iOS or Android: the SDK needs no permissions beyond internet and no Info.plist entries.
 

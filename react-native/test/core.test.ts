@@ -1,11 +1,25 @@
 // The JS layer's own behaviour: no native module, calls before configure, a bad key, deferred deep links, dev checks.
 type Native = Record<string, jest.Mock>
 
+/** React Native's AppState, driven by the tests. */
+const appState = {
+  listeners: new Set<(state: string) => void>(),
+  addEventListener(_: string, listener: (state: string) => void) {
+    appState.listeners.add(listener)
+    return { remove: () => void appState.listeners.delete(listener) }
+  },
+  emit(state: string) {
+    for (const listener of [...appState.listeners]) listener(state)
+  },
+}
+
 /** A fresh copy of the package over a fake native module (or none), with its own state. */
 function load(native: Native | null, dev = false) {
   jest.resetModules()
+  appState.listeners.clear()
   ;(globalThis as { __DEV__?: boolean }).__DEV__ = dev
   jest.doMock("../src/NativeRNUnolink", () => ({ __esModule: true, default: native }))
+  jest.doMock("react-native", () => ({ AppState: appState }))
   return require("../src") as typeof import("../src")
 }
 
@@ -144,4 +158,116 @@ test("signUpSkipped is its own event", () => {
 test("VERSION is the package's version", () => {
   const { VERSION } = load(fakeNative().native)
   expect(VERSION).toBe(require("../package.json").version)
+})
+
+/** react-native-purchases' Purchases, as far as connectRevenueCat uses it. */
+function fakePurchases(initial: string | Error) {
+  let current: string | Error = initial
+  const listeners = new Set<(info: unknown) => void>()
+  const purchases = {
+    getAppUserID: jest.fn(async () => {
+      if (current instanceof Error) throw current
+      return current
+    }),
+    addCustomerInfoUpdateListener: jest.fn((l: (info: unknown) => void) => void listeners.add(l)),
+    removeCustomerInfoUpdateListener: jest.fn((l: (info: unknown) => void) => listeners.delete(l)),
+  }
+  return {
+    purchases,
+    listeners,
+    set(id: string | Error) {
+      current = id
+    },
+    emit() {
+      for (const l of [...listeners]) l({ originalAppUserId: "x" })
+    },
+  }
+}
+
+const settle = () => new Promise((resolve) => setImmediate(resolve))
+
+test("connectRevenueCat reports RevenueCat's ID, then only changes, on customer info updates", async () => {
+  const { native } = fakeNative()
+  const { Unolink } = load(native)
+  Unolink.configure("ulk_key")
+  const rc = fakePurchases("$RCAnonymousID:guest")
+  const disconnect = Unolink.connectRevenueCat(rc.purchases)
+  await settle()
+  expect(native.setUserId.mock.calls).toEqual([["$RCAnonymousID:guest"]])
+
+  rc.emit() // same ID
+  await settle()
+  expect(native.setUserId).toHaveBeenCalledTimes(1)
+
+  rc.set("account-42") // Purchases.logIn
+  rc.emit()
+  await settle()
+  expect(native.setUserId.mock.calls).toEqual([["$RCAnonymousID:guest"], ["account-42"]])
+
+  disconnect()
+  expect(rc.listeners.size).toBe(0)
+  expect(appState.listeners.size).toBe(0)
+  rc.set("account-7")
+  rc.emit()
+  await settle()
+  expect(native.setUserId).toHaveBeenCalledTimes(2)
+})
+
+test("connectRevenueCat before configure: the ID waits and is sent right after it", async () => {
+  const { native } = fakeNative()
+  const { Unolink } = load(native)
+  Unolink.connectRevenueCat(fakePurchases("$RCAnonymousID:guest").purchases)
+  await settle()
+  expect(native.setUserId).not.toHaveBeenCalled()
+  Unolink.configure("ulk_key")
+  expect(native.setUserId).toHaveBeenCalledWith("$RCAnonymousID:guest")
+})
+
+test("connectRevenueCat: errors are swallowed and the ID is read again when the app comes back", async () => {
+  const { native } = fakeNative()
+  const { Unolink } = load(native)
+  Unolink.configure("ulk_key")
+  const rc = fakePurchases(new Error("There is no singleton instance"))
+  Unolink.connectRevenueCat(rc.purchases)
+  await settle()
+  expect(native.setUserId).not.toHaveBeenCalled()
+
+  rc.set("$RCAnonymousID:after-logout")
+  appState.emit("background")
+  await settle()
+  expect(native.setUserId).not.toHaveBeenCalled()
+  appState.emit("active")
+  await settle()
+  expect(native.setUserId).toHaveBeenCalledWith("$RCAnonymousID:after-logout")
+})
+
+test("connectRevenueCat: a newer read wins when answers come back out of order", async () => {
+  const { native } = fakeNative()
+  const { Unolink } = load(native)
+  Unolink.configure("ulk_key")
+  const answers: ((id: string) => void)[] = []
+  const purchases = { getAppUserID: () => new Promise<string>((resolve) => answers.push(resolve)) }
+  Unolink.connectRevenueCat(purchases)
+  void Unolink.revenueCatUserChanged()
+  answers[1]("account-42")
+  await settle()
+  answers[0]("$RCAnonymousID:stale")
+  await settle()
+  expect(native.setUserId.mock.calls).toEqual([["account-42"]])
+})
+
+test("connectRevenueCat without Purchases warns and does nothing", () => {
+  const { native } = fakeNative()
+  const { Unolink } = load(native)
+  Unolink.configure("ulk_key")
+  expect(() => Unolink.connectRevenueCat(undefined as never)()).not.toThrow()
+  expect(native.setUserId).not.toHaveBeenCalled()
+})
+
+test("signUpSkipped carries its properties", () => {
+  const { native } = fakeNative()
+  const { Unolink } = load(native)
+  Unolink.configure("ulk_key")
+  Unolink.signUpSkipped({ screen: "welcome" })
+  expect(native.track).toHaveBeenCalledWith("sign_up_skipped", { screen: "welcome" })
 })
