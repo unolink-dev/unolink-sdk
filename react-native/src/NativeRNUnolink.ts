@@ -17,6 +17,10 @@ export interface Spec extends TurboModule {
   flush(): void
   setEnabled(enabled: boolean): void
   getInstallId(): string | null
+  /** Android: the unconsumed deferred deep link, kept on disk across launches. iOS: always null. Added in 0.3.3. */
+  getPendingDeferredDeepLink(): NativeDeepLink | null
+  /** Android: forgets the deferred deep link on this and every later launch. iOS: does nothing. Added in 0.3.3. */
+  consumeDeferredDeepLink(): void
   readonly onDeferredDeepLink: CodegenTypes.EventEmitter<NativeDeepLink>
 }
 

@@ -23,7 +23,10 @@ function load(native: Native | null, dev = false) {
   return require("../src") as typeof import("../src")
 }
 
-function fakeNative() {
+/** The Android SDK's view of the link: kept on disk until consumed (shared across "launches" in these tests). */
+let kept: unknown = null
+
+function fakeNative({ keepsLinks = true } = {}) {
   let emit: ((link: unknown) => void) | undefined
   const native: Native = {
     configure: jest.fn(),
@@ -38,13 +41,27 @@ function fakeNative() {
       return { remove() {} }
     }),
   }
-  return { native, emit: (link: unknown) => emit!(link) }
+  if (keepsLinks) {
+    native.getPendingDeferredDeepLink = jest.fn(() => kept)
+    native.consumeDeferredDeepLink = jest.fn(() => {
+      kept = null
+    })
+  }
+  return {
+    native,
+    // The Android SDK keeps the link and emits it to the listener (once per install).
+    emit: (link: unknown) => {
+      if (keepsLinks) kept = link
+      emit!(link)
+    },
+  }
 }
 
 const link = { deepLink: "/promo", params: { a: "1" }, linkSlug: "tiktok", clickId: "c1" }
 let warn: jest.SpyInstance
 
 beforeEach(() => {
+  kept = null
   warn = jest.spyOn(console, "warn").mockImplementation(() => {})
 })
 afterEach(() => warn.mockRestore())
@@ -133,6 +150,65 @@ test("the pending link waits until it's consumed (open it after onboarding)", ()
   const late = jest.fn()
   Unolink.addDeferredDeepLinkListener(late)
   expect(late).not.toHaveBeenCalled()
+})
+
+test("an unconsumed link survives an app restart (Android keeps it until it's consumed)", () => {
+  // First launch: the link arrives while the user is in onboarding, and they quit.
+  const first = fakeNative()
+  const launch1 = load(first.native).Unolink
+  launch1.configure("ulk_key")
+  first.emit(link)
+  expect(launch1.getPendingDeferredDeepLink()).toEqual(link)
+
+  // Next launch: the native SDK doesn't emit it again, but it's still pending.
+  const second = fakeNative()
+  const launch2 = load(second.native).Unolink
+  expect(launch2.getPendingDeferredDeepLink()).toBeNull() // before configure
+  launch2.configure("ulk_key")
+  const listener = jest.fn()
+  launch2.addDeferredDeepLinkListener(listener)
+  expect(listener).not.toHaveBeenCalled()
+  expect(launch2.getPendingDeferredDeepLink()).toEqual(link)
+
+  launch2.consumeDeferredDeepLink()
+  expect(second.native.consumeDeferredDeepLink).toHaveBeenCalledTimes(1)
+  expect(launch2.getPendingDeferredDeepLink()).toBeNull()
+
+  const launch3 = load(fakeNative().native).Unolink
+  launch3.configure("ulk_key")
+  expect(launch3.getPendingDeferredDeepLink()).toBeNull()
+})
+
+test("consuming before configure waits for it, like other calls", () => {
+  kept = link
+  const { native } = fakeNative()
+  const { Unolink } = load(native)
+  Unolink.consumeDeferredDeepLink()
+  expect(native.consumeDeferredDeepLink).not.toHaveBeenCalled()
+  Unolink.configure("ulk_key")
+  expect(native.consumeDeferredDeepLink).toHaveBeenCalledTimes(1)
+  expect(Unolink.getPendingDeferredDeepLink()).toBeNull()
+})
+
+test("a native build without the kept link (iPhone, or an older build) still has this launch's link", () => {
+  const { native, emit } = fakeNative({ keepsLinks: false })
+  const { Unolink } = load(native)
+  Unolink.configure("ulk_key")
+  emit(link)
+  expect(Unolink.getPendingDeferredDeepLink()).toEqual(link)
+  expect(() => Unolink.consumeDeferredDeepLink()).not.toThrow()
+  expect(Unolink.getPendingDeferredDeepLink()).toBeNull()
+})
+
+test("a native error reading the kept link falls back to this launch's link", () => {
+  const { native, emit } = fakeNative()
+  const { Unolink } = load(native)
+  Unolink.configure("ulk_key")
+  emit(link)
+  native.getPendingDeferredDeepLink.mockImplementation(() => {
+    throw new Error("boom")
+  })
+  expect(Unolink.getPendingDeferredDeepLink()).toEqual(link)
 })
 
 test("in development, IDs and properties the server would reject are flagged", () => {

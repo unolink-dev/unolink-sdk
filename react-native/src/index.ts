@@ -162,9 +162,10 @@ function linkRevenueCat(purchases: RevenueCatPurchases): RevenueCatLink {
   }
 }
 
-// Deferred deep links. The native SDK delivers the link once, as soon as it's known (on Android that can be before
-// your screens subscribe), so it's kept here: a link that arrives with no listener goes to the first one added, and
-// getPendingDeferredDeepLink() returns it until consumeDeferredDeepLink().
+// Deferred deep links. The native SDK delivers the link to listeners once per install, as soon as it's known (on Android
+// that can be before your screens subscribe), so it's kept here: a link that arrives with no listener goes to the first
+// one added. getPendingDeferredDeepLink() returns it until consumeDeferredDeepLink(): on Android the native SDK keeps
+// it on disk, so it survives app restarts (30 days at most); a link delivered this launch is also kept in memory here.
 type DeepLinkListener = (link: UnolinkDeepLink) => void
 const deepLinkListeners = new Set<DeepLinkListener>()
 let undelivered: UnolinkDeepLink | null = null
@@ -368,8 +369,9 @@ export const Unolink = {
   },
 
   /**
-   * Called once per install when it came from a Unolink link. A link that arrived before any listener goes to the first
-   * one you add. If its screen sits behind onboarding or sign-in, use getPendingDeferredDeepLink() once that's done instead.
+   * Called once per install when it came from a Unolink link: open it, then call consumeDeferredDeepLink(). A link that
+   * arrived before any listener goes to the first one you add. Listeners aren't called again on later launches, so if
+   * its screen sits behind onboarding or sign-in, use getPendingDeferredDeepLink() once that's done instead.
    */
   addDeferredDeepLinkListener(listener: DeepLinkListener): EventSubscription {
     deepLinkListeners.add(listener)
@@ -382,17 +384,32 @@ export const Unolink = {
   },
 
   /**
-   * The deferred deep link of this launch that hasn't been consumed yet, or null. For links whose screen sits behind
-   * onboarding or sign-in: when that's done, open it and call consumeDeferredDeepLink(). Kept for this launch only.
+   * The deferred deep link that hasn't been consumed yet, or null. For links whose screen sits behind onboarding or
+   * sign-in: when that's done, open it and call consumeDeferredDeepLink(). Android keeps it on the device across app
+   * restarts (a new user who quits mid-onboarding still gets it next time) until it's consumed, for at most 30 days
+   * after the install, whether or not a listener already received it. Null before configure() and until Google Play
+   * has answered (the listener tells you when it's known).
    */
   getPendingDeferredDeepLink(): UnolinkDeepLink | null {
+    if (Native && configured && typeof Native.getPendingDeferredDeepLink === "function") {
+      try {
+        const kept = Native.getPendingDeferredDeepLink()
+        if (kept) return kept as UnolinkDeepLink
+      } catch {}
+    }
     return pending
   },
 
-  /** Marks the pending deferred deep link as handled: getPendingDeferredDeepLink() returns null from now on. */
+  /**
+   * Marks the deferred deep link as opened: getPendingDeferredDeepLink() returns null from now on, on later launches
+   * too. Call it once you've opened the link, or it's offered again on every launch for 30 days.
+   */
   consumeDeferredDeepLink(): void {
     pending = null
     undelivered = null
+    call((n) => {
+      if (typeof n.consumeDeferredDeepLink === "function") n.consumeDeferredDeepLink()
+    })
   },
 }
 

@@ -6,6 +6,7 @@ import android.os.Looper
 import android.util.Log
 import dev.unolink.LogLevel
 import dev.unolink.Unolink
+import dev.unolink.UnolinkDeepLink
 import dev.unolink.UnolinkOptions
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
@@ -45,14 +46,7 @@ class UnolinkFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
                     "flutter", call.argument<String>("sdkVersion") ?: "0",
                 )
                 Unolink.setDeferredDeepLinkListener { link ->
-                    main.post {
-                        channel.invokeMethod("onDeferredDeepLink", mapOf(
-                            "deepLink" to link.deepLink,
-                            "params" to link.params,
-                            "linkSlug" to link.linkSlug,
-                            "clickId" to link.clickId,
-                        ))
-                    }
+                    main.post { channel.invokeMethod("onDeferredDeepLink", toMap(link)) }
                 }
             }
             "track" -> Unolink.track(call.argument<String>("name") ?: "", call.argument<Map<String, Any?>>("properties"))
@@ -72,6 +66,12 @@ class UnolinkFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
                 result.success(Unolink.getInstallId())
                 return
             }
+            // Kept on disk by the Android SDK until consumed, so it survives app restarts.
+            "getPendingDeferredDeepLink" -> {
+                result.success(Unolink.getPendingDeferredDeepLink()?.let(::toMap))
+                return
+            }
+            "consumeDeferredDeepLink" -> Unolink.consumeDeferredDeepLink()
             else -> {
                 result.notImplemented()
                 return
@@ -79,4 +79,11 @@ class UnolinkFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         }
         result.success(null)
     }
+
+    private fun toMap(link: UnolinkDeepLink): Map<String, Any?> = mapOf(
+        "deepLink" to link.deepLink,
+        "params" to link.params,
+        "linkSlug" to link.linkSlug,
+        "clickId" to link.clickId,
+    )
 }

@@ -34,7 +34,7 @@ import java.math.BigDecimal
  */
 public object Unolink {
     /** This SDK's version. */
-    public const val VERSION: String = "0.3.2"
+    public const val VERSION: String = "0.3.3"
 
     /** Internal (not private) so tests can run the public API over a test engine. */
     @Volatile internal var engine: Engine? = null
@@ -268,13 +268,42 @@ public object Unolink {
 
     /**
      * Called once per install, on the main thread, when the install came from a Unolink link: open
-     * [UnolinkDeepLink.deepLink]. Android only. If the link is known before you set the listener, it's delivered when
-     * you set it.
+     * [UnolinkDeepLink.deepLink], then call [consumeDeferredDeepLink]. Android only. If the link is known before you set
+     * the listener, it's delivered when you set it (on a later launch too, if no listener was set before).
+     *
+     * Not opening it yet (the screen sits behind onboarding or sign-in)? Ignore it here and read
+     * [getPendingDeferredDeepLink] once that's done: it survives app restarts until consumed.
      */
     @JvmStatic
     public fun setDeferredDeepLinkListener(listener: DeferredDeepLinkListener?) {
         pendingListener = listener
         engine?.setListener(listener)
+    }
+
+    /**
+     * The deferred deep link that hasn't been consumed yet, or null (before [configure], before Google Play has answered,
+     * for installs that didn't come from a Unolink link, and once consumed). Kept on the device across app restarts
+     * until [consumeDeferredDeepLink], for at most 30 days after the install. Being delivered to the listener doesn't
+     * consume it. Android only: always null on iPhone.
+     *
+     * ```kotlin
+     * // when onboarding is done
+     * Unolink.getPendingDeferredDeepLink()?.let { link ->
+     *     open(link.deepLink)
+     *     Unolink.consumeDeferredDeepLink()
+     * }
+     * ```
+     */
+    @JvmStatic
+    public fun getPendingDeferredDeepLink(): UnolinkDeepLink? = engine?.pendingDeepLink
+
+    /**
+     * Marks the deferred deep link as opened: [getPendingDeferredDeepLink] returns null from now on, on later launches
+     * too. Call it once your app has opened the link. Does nothing while no link is known.
+     */
+    @JvmStatic
+    public fun consumeDeferredDeepLink() {
+        engine?.consumeDeepLink()
     }
 
     /** The random ID of this install (null before [configure]). It identifies no person or device. */

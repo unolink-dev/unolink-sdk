@@ -102,6 +102,23 @@ internal object Payloads {
         return UnolinkDeepLink(attribution.optStringOrNull("deepLink"), params, link?.optStringOrNull("slug"), clickId)
     }
 
+    /** The unconsumed deferred deep link as kept on disk, with when it became known (epoch ms). */
+    fun storedDeepLink(link: UnolinkDeepLink, savedAt: Long): String = JSONObject().apply {
+        put("deepLink", link.deepLink ?: JSONObject.NULL)
+        put("params", JSONObject(link.params))
+        put("linkSlug", link.linkSlug ?: JSONObject.NULL)
+        put("clickId", link.clickId)
+        put("savedAt", savedAt)
+    }.toString()
+
+    /** Reads [storedDeepLink]'s output back; null if it's missing or damaged. */
+    fun storedDeepLink(json: String?): Pair<UnolinkDeepLink, Long>? = runCatching {
+        val o = JSONObject(json ?: return null)
+        val clickId = o.optStringOrNull("clickId") ?: return null
+        val params = o.optJSONObject("params")?.let { p -> p.keys().asSequence().associateWith { p.optString(it) } } ?: emptyMap()
+        UnolinkDeepLink(o.optStringOrNull("deepLink"), params, o.optStringOrNull("linkSlug"), clickId) to o.getLong("savedAt")
+    }.getOrNull()
+
     /** The code of an error response (RFC 9457 problem details), e.g. "install_required". */
     fun problemCode(body: String?): String? = runCatching { JSONObject(body ?: return null).optStringOrNull("code") }.getOrNull()
 

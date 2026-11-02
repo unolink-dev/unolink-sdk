@@ -13,7 +13,7 @@ import Foundation
 @objc(Unolink)
 public final class Unolink: NSObject {
     /// This SDK's version.
-    @objc(sdkVersion) public static let version = "0.3.2"
+    @objc(sdkVersion) public static let version = "0.3.3"
 
     private static let lock = NSLock()
     /// Internal (not private) so tests can run the public API over a test engine.

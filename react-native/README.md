@@ -6,8 +6,18 @@ Info.plist entries. It doesn't run in Expo Go (it has native code): use a develo
 
 ```bash
 npx expo install @unolink/react-native     # Expo (then rebuild: npx expo prebuild / eas build)
-npm install @unolink/react-native          # bare React Native (then cd ios && pod install)
+npm install @unolink/react-native          # bare React Native (then cd ios && LANG=en_US.UTF-8 pod install)
 ```
+
+Install notes:
+
+- **CocoaPods needs a UTF-8 locale.** With Ruby 4, or a shell without a UTF-8 locale (some CI images and terminals),
+  `pod install` fails with an encoding error. Run it as `LANG=en_US.UTF-8 pod install` (or `export LANG=en_US.UTF-8`
+  in your shell profile / CI environment first). `npx expo prebuild` and `npx expo run:ios` run `pod install` for you,
+  so set `LANG` before those too.
+- **Don't use `npm install --legacy-peer-deps`.** It rewrites `package-lock.json` and drops optional peer
+  dependencies, which can break other native packages in the app. Use `npx expo install` (Expo) or a plain
+  `npm install`.
 
 ```ts
 import { Unolink, useOnboardingStep } from "@unolink/react-native"
@@ -52,23 +62,41 @@ Without it: `Unolink.setUserId(await Purchases.getAppUserID())` after configurin
 ## Deferred deep links (Android)
 
 `link.deepLink` is what you set on the link: a path such as `/promo/3for2`, or a full URL. If the screen sits behind
-onboarding or sign-in, hold it and open it when that's done:
+onboarding or sign-in, open it when that's done, then consume it:
 
 ```ts
-// after onboarding / sign-in:
+// after onboarding / sign-in (and on every launch after that, until it's consumed):
 const link = Unolink.getPendingDeferredDeepLink()
 if (link?.deepLink) {
-  Unolink.consumeDeferredDeepLink()
   router.push(link.deepLink)                     // a path; open full URLs with Linking.openURL
+  Unolink.consumeDeferredDeepLink()
 }
 ```
+
+The pending link is kept on the device until you call `consumeDeferredDeepLink()` (0.3.3+), so a new user who quits
+mid-onboarding still gets it on the next launch: you don't need to store it yourself. It's kept for at most 30 days
+after the install, then dropped.
 
 If the screen is reachable straight away, a listener is enough. A link that arrives before you subscribe goes to the
 first listener you add:
 
 ```ts
-Unolink.addDeferredDeepLinkListener((link) => link.deepLink && router.push(link.deepLink))
+Unolink.addDeferredDeepLinkListener((link) => {
+  if (link.deepLink) router.push(link.deepLink)
+  Unolink.consumeDeferredDeepLink()
+})
 ```
+
+How the two fit together:
+
+- Listeners are called **once per install** (on the launch the link becomes known, or the first launch after that with
+  a listener), never again on later launches, so a link isn't opened twice.
+- `getPendingDeferredDeepLink()` returns the link on **every launch until it's consumed**, whether or not a listener
+  already received it. It's null before `configure()` and until Google Play has answered (a second or two on the first
+  launch; the listener tells you when it's known).
+- Always call `consumeDeferredDeepLink()` once you've opened the link. If you never call it, listeners behave as before
+  (once per install), but `getPendingDeferredDeepLink()` keeps returning the link for 30 days.
+- iPhone has no install referrer, so there's normally nothing to deliver: the calls are safe and return null.
 
 ## Onboarding
 

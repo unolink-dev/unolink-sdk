@@ -56,6 +56,13 @@ public final class UnolinkFlutterPlugin: NSObject, FlutterPlugin {
         case "getInstallId":
             result(Unolink.installId)
             return
+        case "getPendingDeferredDeepLink":
+            // Deferred deep links come from Google Play's install referrer: nothing is kept on iPhone. The Dart side
+            // keeps a link delivered this launch in memory instead.
+            result(nil)
+            return
+        case "consumeDeferredDeepLink":
+            break
         default:
             result(FlutterMethodNotImplemented)
             return

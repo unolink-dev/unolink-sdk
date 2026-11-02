@@ -39,7 +39,11 @@ internal class Engine(
         const val KEY_INSTALL_ID = "install_id"
         const val KEY_REGISTERED = "install_registered"
         const val KEY_OPTED_OUT = "opted_out"
-        const val KEY_DEEP_LINK_DONE = "deep_link_done"
+        const val KEY_DEEP_LINK_DONE = "deep_link_done"          // delivered to a listener (once per install)
+        const val KEY_DEEP_LINK = "deep_link"                    // the unconsumed deferred deep link, until consumed
+        const val KEY_DEEP_LINK_CONSUMED = "deep_link_consumed"  // consumed or expired: never offered again
+        /** How long an unconsumed deferred deep link is kept (from when it became known). */
+        const val DEEP_LINK_TTL_MS = 30L * 24 * 60 * 60_000
         const val KEY_USER_ID = "user_id"
         const val MAX_USER_ID = 256
     }
@@ -59,7 +63,8 @@ internal class Engine(
     private var foreground = false
     private var timerRunning = false
     private var backgroundAt = 0L
-    private var pendingDeepLink: UnolinkDeepLink? = null
+    /** The unconsumed deferred deep link and when it became known; loaded from disk, so it survives restarts. */
+    @Volatile private var storedDeepLink: Pair<UnolinkDeepLink, Long>? = loadDeepLink()
     @Volatile private var listener: DeferredDeepLinkListener? = null
     @Volatile var publicInstallId: String? = null
         private set
@@ -112,7 +117,24 @@ internal class Engine(
 
     fun setListener(l: DeferredDeepLinkListener?) {
         listener = l
-        scheduler.execute { pendingDeepLink?.let { deliver(it) } }
+        scheduler.execute { deliverToListener() }
+    }
+
+    /**
+     * The deferred deep link that hasn't been consumed yet (on any launch, for [DEEP_LINK_TTL_MS]), or null. Any thread.
+     * Delivery to a listener doesn't consume it; [consumeDeepLink] does.
+     */
+    val pendingDeepLink: UnolinkDeepLink?
+        get() = storedDeepLink?.takeIf { !isExpired(it.second) }?.first
+
+    /** The app opened the deferred deep link: forget it, on every later launch too. No-op while none is known. */
+    fun consumeDeepLink() {
+        storedDeepLink ?: return
+        storedDeepLink = null
+        scheduler.execute {
+            store.putString(KEY_DEEP_LINK, null)
+            store.putBoolean(KEY_DEEP_LINK_CONSUMED, true)
+        }
     }
 
     fun track(name: String, properties: Map<String, Any?>?, revenue: Pair<String, String>?) = scheduler.execute {
@@ -304,17 +326,39 @@ internal class Engine(
         }
     }
 
-    private fun offerDeepLink(link: UnolinkDeepLink) {
-        if (store.getBoolean(KEY_DEEP_LINK_DONE) || pendingDeepLink != null) return
-        pendingDeepLink = link
-        deliver(link)
+    private fun isExpired(savedAt: Long) = clock.now() - savedAt >= DEEP_LINK_TTL_MS
+
+    /** Reads the unconsumed link from disk; an expired one is dropped (and counts as consumed). */
+    private fun loadDeepLink(): Pair<UnolinkDeepLink, Long>? {
+        val raw = store.getString(KEY_DEEP_LINK) ?: return null
+        val stored = Payloads.storedDeepLink(raw)
+        if (stored == null || isExpired(stored.second)) {
+            store.putString(KEY_DEEP_LINK, null)
+            store.putBoolean(KEY_DEEP_LINK_CONSUMED, true)
+            return null
+        }
+        return stored
     }
 
-    private fun deliver(link: UnolinkDeepLink) {
+    /**
+     * A link became known (referrer or install response). The first one is kept until consumed; later offers (the install
+     * response after the referrer, a re-registration) and links of installs that already delivered one (SDK 0.3.2 and
+     * earlier kept no link on disk) are ignored.
+     */
+    private fun offerDeepLink(link: UnolinkDeepLink) {
+        if (storedDeepLink != null || store.getBoolean(KEY_DEEP_LINK_DONE) || store.getBoolean(KEY_DEEP_LINK_CONSUMED)) return
+        val now = clock.now()
+        store.putString(KEY_DEEP_LINK, Payloads.storedDeepLink(link, now))
+        storedDeepLink = link to now
+        deliverToListener()
+    }
+
+    /** Listeners get the link once per install (as in 0.3.2), so an app that never consumes it doesn't reopen it. */
+    private fun deliverToListener() {
         val l = listener ?: return
+        val link = pendingDeepLink ?: return
         if (store.getBoolean(KEY_DEEP_LINK_DONE)) return
         store.putBoolean(KEY_DEEP_LINK_DONE, true)
-        pendingDeepLink = null
         runOnMain { l.onDeferredDeepLink(link) }
     }
 }

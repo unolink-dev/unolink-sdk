@@ -5,7 +5,7 @@ Kotlin, callable from Java. minSdk 23. Dependencies: Google's Play Install Refer
 
 ```kotlin
 // build.gradle.kts
-implementation("dev.unolink:unolink:0.3.2")
+implementation("dev.unolink:unolink:0.3.3")
 ```
 
 ```kotlin
@@ -13,7 +13,7 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         Unolink.configure(this, "ulk_…") // your app's SDK key (Unolink → your app → Settings → API keys)
-        Unolink.setDeferredDeepLinkListener { link -> /* open link.deepLink */ }
+        Unolink.setDeferredDeepLinkListener { link -> /* open link.deepLink */ Unolink.consumeDeferredDeepLink() }
     }
 }
 
@@ -60,6 +60,10 @@ Java: `Unolink.configure(this, "ulk_…")`, `Unolink.purchase(new BigDecimal("49
 
 - First launch: reads Google Play's install referrer, registers the install, and calls your deferred deep link
   listener once if the install came from a Unolink link.
+- Deferred deep link: the listener is called once per install. The link is also kept on the device until you call
+  `Unolink.consumeDeferredDeepLink()` (at most 30 days): if its screen sits behind onboarding or sign-in, read
+  `Unolink.getPendingDeferredDeepLink()` when that's done, open it, then consume it. It survives app restarts, so a user
+  who quits mid-onboarding still gets it next time. Always consume a link you've opened.
 - Automatic events: `first_open`, `session_start` (launch, or after 30 minutes in the background), `app_background`.
 - Events are queued on disk (up to 1,000), sent in batches of up to 100 every 15 seconds while the app is open, at 20
   queued events, and when the app goes to the background. Offline? They wait and retry with backoff.

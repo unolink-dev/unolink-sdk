@@ -4,7 +4,8 @@
 //
 // Every call is a jest.fn (so expect(Unolink.signUp).toHaveBeenCalledWith("apple") works), nothing touches native code,
 // and Unolink.__calls lists every call in order: [["signUp", "apple"], ...]. Unolink.__reset() clears both between tests.
-// Deferred deep links: Unolink.__emitDeferredDeepLink(link) delivers one as the native SDK would.
+// Deferred deep links: Unolink.__emitDeferredDeepLink(link) delivers one as the native SDK would, and
+// Unolink.__setPendingDeferredDeepLink(link) sets one kept from an earlier launch (pending, but no listener call).
 "use strict"
 
 const calls = []
@@ -65,6 +66,9 @@ const Unolink = {
     pending = link
     if (listeners.size === 0) undelivered = link
     else for (const listener of [...listeners]) listener(link)
+  },
+  __setPendingDeferredDeepLink(link) {
+    pending = link
   },
   __reset() {
     calls.length = 0
