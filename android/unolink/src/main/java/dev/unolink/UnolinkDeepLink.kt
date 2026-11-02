@@ -16,7 +16,7 @@ public data class UnolinkDeepLink(
     public val clickId: String,
 )
 
-/** Receives the deferred deep link once per install, on the main thread. */
+/** Receives the deferred deep link once per install, on the main thread. Call [Unolink.consumeDeferredDeepLink] once it is opened. */
 public fun interface DeferredDeepLinkListener {
     public fun onDeferredDeepLink(link: UnolinkDeepLink)
 }

@@ -36,11 +36,12 @@ class Unolink {
   Unolink._();
 
   /// This package's version (sent with every install as the SDK version).
-  static const String version = '0.3.2';
+  static const String version = '0.3.3';
 
   static const MethodChannel _channel = MethodChannel('dev.unolink/sdk');
   static void Function(UnolinkDeepLink link)? _deepLinkListener;
-  static UnolinkDeepLink? _pendingDeepLink;
+  static UnolinkDeepLink? _undeliveredDeepLink; // arrived before any listener: goes to the first one set
+  static UnolinkDeepLink? _deepLinkThisLaunch; // delivered this launch and not consumed (iPhone, older native builds)
   static bool _configured = false;
   static _RevenueCatLink? _revenueCat;
 
@@ -52,11 +53,12 @@ class Unolink {
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'onDeferredDeepLink') {
         final link = UnolinkDeepLink.fromMap(call.arguments as Map<Object?, Object?>);
+        _deepLinkThisLaunch = link;
         final listener = _deepLinkListener;
         if (listener != null) {
           listener(link);
         } else {
-          _pendingDeepLink = link;
+          _undeliveredDeepLink = link;
         }
       }
     });
@@ -181,14 +183,41 @@ class Unolink {
   /// Turns tracking off (queued events are deleted) or back on. Remembered across launches.
   static Future<void> setEnabled(bool enabled) => _invoke('setEnabled', {'enabled': enabled});
 
-  /// Called once per install when it came from a Unolink link: open link.deepLink. Delivered even if set late.
+  /// Called once per install when it came from a Unolink link: open link.deepLink, then call [consumeDeferredDeepLink].
+  /// Delivered even if set late. It isn't called again on later launches, so if the link's screen sits behind
+  /// onboarding or sign-in, use [getPendingDeferredDeepLink] once that's done instead.
   static void setDeferredDeepLinkListener(void Function(UnolinkDeepLink link)? listener) {
     _deepLinkListener = listener;
-    final pending = _pendingDeepLink;
+    final pending = _undeliveredDeepLink;
     if (listener != null && pending != null) {
-      _pendingDeepLink = null;
+      _undeliveredDeepLink = null;
       listener(pending);
     }
+  }
+
+  /// The deferred deep link that hasn't been consumed yet, or null. For links whose screen sits behind onboarding or
+  /// sign-in: when that's done, open it and call [consumeDeferredDeepLink]. Android keeps it on the device across app
+  /// restarts (a new user who quits mid-onboarding still gets it next time) until it's consumed, for at most 30 days
+  /// after the install, whether or not a listener already received it. Null before [configure] and until Google Play
+  /// has answered (the listener tells you when it's known).
+  static Future<UnolinkDeepLink?> getPendingDeferredDeepLink() async {
+    try {
+      final kept = await _channel.invokeMethod<Map<Object?, Object?>>('getPendingDeferredDeepLink');
+      if (kept != null) return UnolinkDeepLink.fromMap(kept);
+    } on MissingPluginException {
+      // Web, desktop or tests without the native SDK.
+    } on PlatformException {
+      // Never expected; fall back to this launch's link.
+    }
+    return _deepLinkThisLaunch;
+  }
+
+  /// Marks the deferred deep link as opened: [getPendingDeferredDeepLink] returns null from now on, on later launches
+  /// too. Call it once you've opened the link, or it's offered again on every launch for 30 days.
+  static Future<void> consumeDeferredDeepLink() {
+    _deepLinkThisLaunch = null;
+    _undeliveredDeepLink = null;
+    return _invoke('consumeDeferredDeepLink');
   }
 
   /// The server accepts only step, index and flow on onboarding events.

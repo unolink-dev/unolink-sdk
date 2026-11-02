@@ -5,10 +5,21 @@ views, trials and purchases, and send people who install from a link straight to
 
 | Platform | Status | Install |
 |---|---|---|
-| Android (Kotlin, Java) | 0.3.2, beta | Maven Central: `dev.unolink:unolink:0.3.2` |
-| iOS (Swift, Objective-C) | 0.3.2, beta | Swift Package Manager: `https://github.com/unolink-dev/unolink-sdk` |
-| React Native / Expo | 0.3.2, beta | npm: `@unolink/react-native` |
-| Flutter | 0.3.2, beta | pub.dev: `unolink` |
+| Android (Kotlin, Java) | 0.3.3, beta | Maven Central: `dev.unolink:unolink:0.3.3` |
+| iOS (Swift, Objective-C) | 0.3.3, beta | Swift Package Manager: `https://github.com/unolink-dev/unolink-sdk` |
+| React Native / Expo | 0.3.3, beta | npm: `@unolink/react-native` |
+| Flutter | 0.3.3, beta | pub.dev: `unolink` |
+
+Install notes (React Native, Expo, Flutter):
+
+- **CocoaPods needs a UTF-8 locale.** With Ruby 4, or a shell without a UTF-8 locale, `pod install` fails with an
+  encoding error: run `LANG=en_US.UTF-8 pod install` (or `export LANG=en_US.UTF-8` before `npx expo prebuild`,
+  `npx expo run:ios` or `flutter build ios`).
+- **Don't use `npm install --legacy-peer-deps`.** It rewrites `package-lock.json` and drops optional peer dependencies.
+  Use `npx expo install @unolink/react-native` (Expo) or a plain `npm install`.
+
+Deferred deep links (Android) stay pending on the device until the app calls `consumeDeferredDeepLink()` (30 days at
+most), so a new user who quits mid-onboarding still gets theirs on the next launch. See each SDK's README.
 
 ## What the SDK collects
 

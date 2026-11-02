@@ -4,8 +4,10 @@ import android.util.Log
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.bridge.WritableMap
 import dev.unolink.LogLevel
 import dev.unolink.Unolink
+import dev.unolink.UnolinkDeepLink
 import dev.unolink.UnolinkOptions
 import java.math.BigDecimal
 
@@ -24,16 +26,13 @@ class RNUnolinkModule(private val context: ReactApplicationContext) : NativeRNUn
         }
         val options = UnolinkOptions(baseUrl = baseUrl?.ifEmpty { null } ?: UnolinkOptions.DEFAULT_BASE_URL, logLevel = level, debug = debug)
         Unolink.configureFromWrapper(context.applicationContext, apiKey, options, "react-native", sdkVersion)
-        Unolink.setDeferredDeepLinkListener { link ->
-            val params = Arguments.createMap().apply { link.params.forEach { (k, v) -> putString(k, v) } }
-            emitOnDeferredDeepLink(Arguments.createMap().apply {
-                if (link.deepLink != null) putString("deepLink", link.deepLink) else putNull("deepLink")
-                putMap("params", params)
-                if (link.linkSlug != null) putString("linkSlug", link.linkSlug) else putNull("linkSlug")
-                putString("clickId", link.clickId)
-            })
-        }
+        Unolink.setDeferredDeepLinkListener { link -> emitOnDeferredDeepLink(link.toMap()) }
     }
+
+    /** Kept on disk by the Android SDK until consumed, so it survives app restarts. */
+    override fun getPendingDeferredDeepLink(): WritableMap? = Unolink.getPendingDeferredDeepLink()?.toMap()
+
+    override fun consumeDeferredDeepLink() = Unolink.consumeDeferredDeepLink()
 
     override fun track(name: String, properties: ReadableMap?) {
         Unolink.track(name, properties?.toHashMap())
@@ -59,6 +58,13 @@ class RNUnolinkModule(private val context: ReactApplicationContext) : NativeRNUn
     companion object {
         const val NAME = "RNUnolink"
     }
+}
+
+private fun UnolinkDeepLink.toMap(): WritableMap = Arguments.createMap().apply {
+    if (deepLink != null) putString("deepLink", deepLink) else putNull("deepLink")
+    putMap("params", Arguments.createMap().apply { params.forEach { (k, v) -> putString(k, v) } })
+    if (linkSlug != null) putString("linkSlug", linkSlug) else putNull("linkSlug")
+    putString("clickId", clickId)
 }
 
 private fun String.toBigDecimalOrNull(): BigDecimal? = try { BigDecimal(this) } catch (e: NumberFormatException) { null }

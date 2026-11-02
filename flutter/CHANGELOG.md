@@ -1,3 +1,9 @@
+## 0.3.3
+
+* Android: the deferred deep link is kept on the device until you consume it. New `getPendingDeferredDeepLink()` returns it on every launch (not just the one it arrived on) until `consumeDeferredDeepLink()`, for at most 30 days after the install, so a new user who quits mid-onboarding still gets it next time. The listener is still called once per install, so nothing opens twice. Call `consumeDeferredDeepLink()` once you've opened the link. Same in the Android SDK and React Native (where the link was kept for one launch only).
+* iPhone: both calls are safe and return null (there's no install referrer).
+* README: `pod install` needs a UTF-8 locale (Ruby 4): run `LANG=en_US.UTF-8 pod install`.
+
 ## 0.3.2
 
 * `signUpSkipped()` when someone continues as a guest instead of creating an account (it was `track('sign_up_skipped')`).

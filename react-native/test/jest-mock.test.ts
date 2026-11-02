@@ -2,7 +2,12 @@
 jest.mock("../src", () => require("../jest"))
 import { Unolink } from "../src"
 
-const mock = Unolink as typeof Unolink & { __calls: unknown[][]; __reset(): void; __emitDeferredDeepLink(link: unknown): void }
+const mock = Unolink as typeof Unolink & {
+  __calls: unknown[][]
+  __reset(): void
+  __emitDeferredDeepLink(link: unknown): void
+  __setPendingDeferredDeepLink(link: unknown): void
+}
 
 beforeEach(() => mock.__reset())
 
@@ -20,6 +25,17 @@ test("deferred links behave like the real package", () => {
   const listener = jest.fn()
   Unolink.addDeferredDeepLinkListener(listener)
   expect(listener).toHaveBeenCalledWith(link)
+  expect(Unolink.getPendingDeferredDeepLink()).toEqual(link)
+  Unolink.consumeDeferredDeepLink()
+  expect(Unolink.getPendingDeferredDeepLink()).toBeNull()
+})
+
+test("a link kept from an earlier launch is pending without calling listeners", () => {
+  const link = { deepLink: "/promo", params: {}, linkSlug: null, clickId: "c" }
+  mock.__setPendingDeferredDeepLink(link)
+  const listener = jest.fn()
+  Unolink.addDeferredDeepLinkListener(listener)
+  expect(listener).not.toHaveBeenCalled()
   expect(Unolink.getPendingDeferredDeepLink()).toEqual(link)
   Unolink.consumeDeferredDeepLink()
   expect(Unolink.getPendingDeferredDeepLink()).toBeNull()

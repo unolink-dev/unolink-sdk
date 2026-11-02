@@ -81,6 +81,17 @@ RCT_EXPORT_MODULE(RNUnolink)
   return Unolink.installId;
 }
 
+// Deferred deep links come from Google Play's install referrer: there's nothing kept on iPhone. The JS layer keeps a
+// link delivered this launch (an install attributed with certainty) in memory instead.
+- (NSDictionary *)getPendingDeferredDeepLink
+{
+  return nil;
+}
+
+- (void)consumeDeferredDeepLink
+{
+}
+
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const facebook::react::ObjCTurboModule::InitParams &)params
 {
   return std::make_shared<facebook::react::NativeRNUnolinkSpecJSI>(params);
