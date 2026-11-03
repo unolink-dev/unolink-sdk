@@ -6,8 +6,10 @@ name: Release
 # iOS (Swift Package Manager) is the tag itself. The other registries are published below:
 #   npm      @unolink/react-native     trusted publishing (OIDC), no token
 #   pub.dev  unolink                   automated publishing (OIDC), no token
-#   Maven    dev.unolink:unolink       ORG_GRADLE_PROJECT_* repository secrets (token + signing key)
+#   Maven    dev.unolink:unolink       ORG_GRADLE_PROJECT_* secrets of the "release" environment (token + signing key)
 # Each job skips a version that is already published, so re-running a failed release is safe.
+# Only a tag on a commit that is on main is released; the publishing jobs run in the "release" environment.
+# Setup and owner steps: RELEASING.md.
 
 on:
   push:
@@ -27,7 +29,17 @@ jobs:
     outputs:
       version: ${{ steps.check.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0   # full history, so the tag commit can be compared with main
+          persist-credentials: false
+      - name: The tagged commit is on main
+        run: |
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "::error::$GITHUB_REF_NAME points at $(git rev-parse --short HEAD), which is not on main. Tag a commit on main."
+            exit 1
+          fi
       - id: check
         run: |
           v="${GITHUB_REF_NAME#v}"
@@ -54,6 +66,7 @@ jobs:
     name: npm (@unolink/react-native)
     needs: versions
     runs-on: ubuntu-latest
+    environment: release
     permissions:
       contents: read
       id-token: write
@@ -63,32 +76,34 @@ jobs:
     env:
       VERSION: ${{ needs.versions.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
-      - name: npm 11.5.1+ (needed for trusted publishing)
-        run: npm install -g npm@latest
+      # Trusted publishing needs npm 11.5.1 or newer. Fixed version, so a bad npm release can't reach a publish.
+      - name: npm 11.21.1
+        run: npm install -g npm@11.21.1 && npm --version
       - id: published
         run: |
           if [ -n "$(npm view "@unolink/react-native@$VERSION" version 2>/dev/null)" ]; then
             echo "::notice::@unolink/react-native@$VERSION is already on npm; skipping"; echo "done=true" >> "$GITHUB_OUTPUT"
           fi
       - if: steps.published.outputs.done != 'true'
-        run: npm install --no-audit --no-fund && npm publish
+        run: npm ci --no-audit --no-fund && npm publish
 
   pub:
     name: pub.dev (unolink)
     needs: versions
     runs-on: ubuntu-latest
+    environment: release
     permissions:
       contents: read
       id-token: write
     env:
       VERSION: ${{ needs.versions.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - id: published
         run: |
           if curl -fs "https://pub.dev/api/packages/unolink/versions/$VERSION" >/dev/null; then
@@ -96,9 +111,9 @@ jobs:
           fi
       # setup-dart exchanges this run's GitHub OIDC token for a pub.dev credential; flutter's pub reuses it.
       - if: steps.published.outputs.done != 'true'
-        uses: dart-lang/setup-dart@v1
+        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
       - if: steps.published.outputs.done != 'true'
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
       - if: steps.published.outputs.done != 'true'
@@ -112,25 +127,26 @@ jobs:
     name: Maven Central (dev.unolink:unolink)
     needs: versions
     runs-on: ubuntu-latest
+    environment: release
     defaults:
       run:
         working-directory: android
     env:
       VERSION: ${{ needs.versions.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - id: published
         run: |
           if curl -fsI "https://repo1.maven.org/maven2/dev/unolink/unolink/$VERSION/unolink-$VERSION.pom" >/dev/null; then
             echo "::notice::dev.unolink:unolink:$VERSION is already on Maven Central; skipping"; echo "done=true" >> "$GITHUB_OUTPUT"
           fi
       - if: steps.published.outputs.done != 'true'
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version: 21
       - if: steps.published.outputs.done != 'true'
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
       - if: steps.published.outputs.done != 'true'
         name: Upload, sign and release
         run: ./gradlew --no-daemon --no-configuration-cache :unolink:publishAndReleaseToMavenCentral
