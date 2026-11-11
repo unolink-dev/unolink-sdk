@@ -110,4 +110,16 @@ final class RevenueCatPublicAPITests: XCTestCase {
         XCTAssertEqual(event["name"] as? String, "sign_up_skipped")
         XCTAssertEqual((event["properties"] as? [String: Any])?["screen"] as? String, "welcome")
     }
+
+    func testHeardFromSendsOnlyTheSource() {
+        Unolink.engine = h.engine
+        Unolink.heardFrom("tiktok")
+        Unolink.flush()
+        let request = h.server.requests.last { $0.path == "/v1/events" }!
+        Contract.assertValid("events-request", request.body!)
+        let event = (request.json["events"] as! [[String: Any]]).last!
+        XCTAssertEqual(event["name"] as? String, "heard_from")
+        XCTAssertEqual(event["properties"] as? [String: String], ["source": "tiktok"])
+        XCTAssertEqual(Unolink.heardFromSources.count, 14)
+    }
 }

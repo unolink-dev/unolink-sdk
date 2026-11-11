@@ -1,3 +1,7 @@
+## 0.3.4
+
+* `heardFrom(source)` for the "Where did you hear about us?" question in your onboarding: one of `heardFromSources` (`app_store`, `google_play`, `search`, `tiktok`, `instagram`, `facebook`, `youtube`, `x`, `reddit`, `friend`, `ad`, `podcast`, `blog`, `other`; anything else is stored as `other`). Free, and the latest answer counts. The dashboard shows it per person in Journeys and as a card in the Onboarding tab, with installs, organic vs from links, paying users and revenue per answer. Same in every SDK.
+
 ## 0.3.3
 
 * Android: the deferred deep link is kept on the device until you consume it. New `getPendingDeferredDeepLink()` returns it on every launch (not just the one it arrived on) until `consumeDeferredDeepLink()`, for at most 30 days after the install, so a new user who quits mid-onboarding still gets it next time. The listener is still called once per install, so nothing opens twice. Call `consumeDeferredDeepLink()` once you've opened the link. Same in the Android SDK and React Native (where the link was kept for one launch only).

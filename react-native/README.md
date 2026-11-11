@@ -32,6 +32,7 @@ Unolink.paywallSkipped("onboarding")                   // closed without buying:
 Unolink.signUp("apple")                                 // a new account
 Unolink.signIn("apple")                                 // a returning user signed in
 Unolink.signUpSkipped()                                 // continued as a guest
+Unolink.heardFrom("tiktok")                             // "Where did you hear about us?" (HEARD_FROM_SOURCES)
 Unolink.connectRevenueCat(Purchases)                    // RevenueCat's user ID, kept current (see below)
 Unolink.purchase("49.99", "USD", "pro_yearly")          // not needed if RevenueCat is connected to Unolink
 Unolink.track("level_up", { level: 3 })

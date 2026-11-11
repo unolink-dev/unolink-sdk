@@ -66,4 +66,13 @@ void main() {
     await Unolink.signUpSkipped();
     expect(calls.single.arguments, {'name': 'sign_up_skipped', 'properties': null});
   });
+
+  test('heardFrom sends only the source', () async {
+    await Unolink.heardFrom('tiktok');
+    expect(calls.single.arguments, {
+      'name': 'heard_from',
+      'properties': {'source': 'tiktok'},
+    });
+    expect(Unolink.heardFromSources, hasLength(14));
+  });
 }

@@ -131,4 +131,20 @@ class RevenueCatPublicApiTest {
         assertEquals("sign_up_skipped", event.getString("name"))
         assertEquals("welcome", event.getJSONObject("properties").getString("screen"))
     }
+
+    @Test
+    fun heard_from_sends_only_the_source() {
+        Unolink.engine = h.engine
+        Unolink.heardFrom("tiktok")
+        Unolink.flush()
+        val request = h.server.requests.last { it.path == "/v1/events" }
+        Contract.assertValid("events-request", request.body!!)
+        val events = request.json.getJSONArray("events")
+        val event = events.getJSONObject(events.length() - 1)
+        assertEquals("heard_from", event.getString("name"))
+        val properties = event.getJSONObject("properties")
+        assertEquals("tiktok", properties.getString("source"))
+        assertEquals(1, properties.length())
+        assertEquals(14, Unolink.HEARD_FROM_SOURCES.size)
+    }
 }

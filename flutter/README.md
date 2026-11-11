@@ -4,7 +4,7 @@ Unolink for Flutter. A thin layer over the native Unolink iOS and Android SDKs, 
 
 ```yaml
 dependencies:
-  unolink: ^0.3.3
+  unolink: ^0.3.4
 ```
 
 iOS: CocoaPods needs a UTF-8 locale. With Ruby 4, or a shell without one (some CI images), `pod install` (and
@@ -33,6 +33,7 @@ Unolink.paywallSkipped(placement: 'onboarding');
 Unolink.signUp(method: 'apple');               // a new account
 Unolink.signIn(method: 'apple');               // a returning user signed in
 Unolink.signUpSkipped();                       // continued as a guest
+Unolink.heardFrom('tiktok');                   // "Where did you hear about us?" (Unolink.heardFromSources)
 Unolink.purchase('49.99', 'USD', productId: 'pro_yearly'); // not needed if RevenueCat is connected to Unolink
 Unolink.track('level_up', {'level': 3});
 ```

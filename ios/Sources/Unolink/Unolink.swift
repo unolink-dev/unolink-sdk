@@ -13,7 +13,7 @@ import Foundation
 @objc(Unolink)
 public final class Unolink: NSObject {
     /// This SDK's version.
-    @objc(sdkVersion) public static let version = "0.3.3"
+    @objc(sdkVersion) public static let version = "0.3.4"
 
     private static let lock = NSLock()
     /// Internal (not private) so tests can run the public API over a test engine.
@@ -127,6 +127,16 @@ public final class Unolink: NSObject {
     @objc(signUpSkippedWithProperties:)
     public static func signUpSkipped(properties: [String: Any]? = nil) {
         withEngine { $0.track("sign_up_skipped", properties: properties, revenue: nil) }
+    }
+
+    /// The answers `heardFrom` takes. Map your own onboarding options to these.
+    @objc public static let heardFromSources: [String] = ["app_store", "google_play", "search", "tiktok", "instagram", "facebook", "youtube", "x", "reddit", "friend", "ad", "podcast", "blog", "other"]
+
+    /// "Where did you hear about us?": the user's answer from your onboarding, as one of `heardFromSources`
+    /// (anything else is stored as "other"). Free, and the latest answer counts. Never send what the user typed.
+    @objc(heardFrom:)
+    public static func heardFrom(_ source: String) {
+        withEngine { $0.track("heard_from", properties: ["source": source], revenue: nil) }
     }
 
     /// A free trial started.

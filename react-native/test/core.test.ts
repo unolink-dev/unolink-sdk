@@ -231,6 +231,15 @@ test("signUpSkipped is its own event", () => {
   expect(native.track).toHaveBeenCalledWith("sign_up_skipped", null)
 })
 
+test("heardFrom sends only the source", () => {
+  const { native } = fakeNative()
+  const { Unolink, HEARD_FROM_SOURCES } = load(native)
+  Unolink.configure("ulk_key")
+  Unolink.heardFrom("tiktok")
+  expect(native.track).toHaveBeenCalledWith("heard_from", { source: "tiktok" })
+  expect(HEARD_FROM_SOURCES).toHaveLength(14)
+})
+
 test("VERSION is the package's version", () => {
   const { VERSION } = load(fakeNative().native)
   expect(VERSION).toBe(require("../package.json").version)

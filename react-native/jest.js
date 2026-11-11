@@ -36,6 +36,7 @@ const Unolink = {
   signUp: fn("signUp"),
   signIn: fn("signIn"),
   signUpSkipped: fn("signUpSkipped"),
+  heardFrom: fn("heardFrom"),
   trialStarted: fn("trialStarted"),
   purchase: fn("purchase"),
   purchaseCancelled: fn("purchaseCancelled"),

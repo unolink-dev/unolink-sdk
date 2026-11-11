@@ -1,0 +1,22 @@
+{
+  "name": "heard_from",
+  "description": "heard_from carries one property, source, from a fixed list (anything else is stored as other); it is free, so it is kept even over the quota's hard cap. Without a string source it is rejected with validation.",
+  "setup": { "plan": "pro", "key": "valid", "usageThisMonth": 2000000 },
+  "steps": [
+    {
+      "request": { "method": "POST", "path": "/v1/install", "body": {
+        "installId": "${uuid:install}", "platform": "ios", "sdk": { "name": "ios", "version": "1.0.0" } } },
+      "expect": { "status": 200 }
+    },
+    {
+      "request": { "method": "POST", "path": "/v1/events", "body": { "installId": "${uuid:install}", "events": [
+        { "id": "${uuid:tiktok}", "name": "heard_from", "timestamp": "${now}", "properties": { "source": "tiktok" } },
+        { "id": "${uuid:unknown}", "name": "heard_from", "timestamp": "${now}", "properties": { "source": "myspace" } },
+        { "id": "${uuid:no_source}", "name": "heard_from", "timestamp": "${now}" },
+        { "id": "${uuid:number}", "name": "heard_from", "timestamp": "${now}", "properties": { "source": 3 } } ] } },
+      "expect": { "status": 202, "schema": "events-response", "body": { "accepted": 2, "duplicates": 0, "rejected": [
+        { "id": "${uuid:no_source}", "code": "validation" },
+        { "id": "${uuid:number}", "code": "validation" } ] } }
+    }
+  ]
+}

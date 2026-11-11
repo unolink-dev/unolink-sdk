@@ -28,6 +28,7 @@ Unolink.paywallSkipped(placement: "onboarding")
 Unolink.signUp(method: "apple")                // a new account
 Unolink.signIn(method: "apple")                // a returning user signed in
 Unolink.signUpSkipped()                        // continued as a guest
+Unolink.heardFrom("tiktok")                    // "Where did you hear about us?" (Unolink.heardFromSources)
 Unolink.connectRevenueCat { Purchases.isConfigured ? Purchases.shared.appUserID : nil }   // see RevenueCat below
 Unolink.trialStarted(productId: "pro_yearly")
 Unolink.purchase(amount: product.price, currency: "USD", productId: product.id)   // amount: Decimal

@@ -5,7 +5,7 @@ Kotlin, callable from Java. minSdk 23. Dependencies: Google's Play Install Refer
 
 ```kotlin
 // build.gradle.kts
-implementation("dev.unolink:unolink:0.3.3")
+implementation("dev.unolink:unolink:0.3.4")
 ```
 
 ```kotlin
@@ -25,6 +25,7 @@ Unolink.paywallSkipped()
 Unolink.signUp("google")                                 // a new account
 Unolink.signIn("google")                                 // a returning user signed in
 Unolink.signUpSkipped()                                  // continued as a guest
+Unolink.heardFrom("tiktok")                              // "Where did you hear about us?" (Unolink.HEARD_FROM_SOURCES)
 Unolink.connectRevenueCat { Purchases.sharedInstance.appUserID }   // see RevenueCat below
 Unolink.trialStarted(productId = "pro_yearly")
 Unolink.purchase(BigDecimal("49.99"), "USD", productId = "pro_yearly")

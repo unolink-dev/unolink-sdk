@@ -40,7 +40,7 @@ paths:
   /v1/events:
     post:
       summary: A batch of up to 100 events, deduplicated by event id.
-      description: Properties of onboarding_step and onboarding_skipped are fixed (step, index, flow) and capped per install. See README.md, "Onboarding progress".
+      description: Properties of onboarding_step and onboarding_skipped are fixed (step, index, flow) and capped per install; heard_from carries only source, from a fixed list. See README.md, "Onboarding progress" and "Where they heard about us".
       requestBody:
         required: true
         content:

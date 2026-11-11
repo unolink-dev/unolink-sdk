@@ -5,10 +5,10 @@ views, trials and purchases, and send people who install from a link straight to
 
 | Platform | Status | Install |
 |---|---|---|
-| Android (Kotlin, Java) | 0.3.3, beta | Maven Central: `dev.unolink:unolink:0.3.3` |
-| iOS (Swift, Objective-C) | 0.3.3, beta | Swift Package Manager: `https://github.com/unolink-dev/unolink-sdk` |
-| React Native / Expo | 0.3.3, beta | npm: `@unolink/react-native` |
-| Flutter | 0.3.3, beta | pub.dev: `unolink` |
+| Android (Kotlin, Java) | 0.3.4, beta | Maven Central: `dev.unolink:unolink:0.3.4` |
+| iOS (Swift, Objective-C) | 0.3.4, beta | Swift Package Manager: `https://github.com/unolink-dev/unolink-sdk` |
+| React Native / Expo | 0.3.4, beta | npm: `@unolink/react-native` |
+| Flutter | 0.3.4, beta | pub.dev: `unolink` |
 
 Install notes (React Native, Expo, Flutter):
 
@@ -148,7 +148,7 @@ flowchart TB
 | Native core sync | `flutter/tool/sync_native.sh` | Copies the iOS and Android cores into the Flutter plugin (react-native/scripts/sync-native.mjs does the same for React Native). |
 | API contract | `contract/openapi.yaml` | The shared spec for install and events, plus the schemas and scenarios every SDK is tested against. |
 
-**Built with:** Version 0.3.3 (beta), MIT licence, iOS: Swift 5.9, Swift Package Manager, iOS 13+, no dependencies, privacy manifest, Android: Kotlin 2.1, minSdk 23, Maven Central (dev.unolink:unolink), Google Play Install Referrer, React Native: @unolink/react-native on npm, RN 0.79+, TurboModule, Expo dev builds (not Expo Go), Flutter: unolink on pub.dev, Dart 3.4+, Flutter 3.22+
+**Built with:** Version 0.3.4 (beta), MIT licence, iOS: Swift 5.9, Swift Package Manager, iOS 13+, no dependencies, privacy manifest, Android: Kotlin 2.1, minSdk 23, Maven Central (dev.unolink:unolink), Google Play Install Referrer, React Native: @unolink/react-native on npm, RN 0.79+, TurboModule, Expo dev builds (not Expo Go), Flutter: unolink on pub.dev, Dart 3.4+, Flutter 3.22+
 
 ### Links
 
@@ -164,6 +164,8 @@ flowchart TB
 - App version, OS version, SDK version, phone or tablet, language.
 - The events you send (`onboardingStep`, `onboardingCompleted`, `paywallViewed`, `trialStarted`, `purchase`, your own) with the
   properties you choose, plus three automatic ones: first open, session start, app to background.
+- If your app calls `heardFrom`, the answer to "Where did you hear about us?" as one code from a fixed list (TikTok,
+  App Store, Friend…), never anything the user typed.
 - On Android, the Google Play install referrer, which says which Unolink link someone installed from.
 
 It does **not** collect the IDFA or Google Advertising ID, never shows the App Tracking Transparency prompt, and never

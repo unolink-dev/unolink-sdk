@@ -34,7 +34,7 @@ import java.math.BigDecimal
  */
 public object Unolink {
     /** This SDK's version. */
-    public const val VERSION: String = "0.3.3"
+    public const val VERSION: String = "0.3.4"
 
     /** Internal (not private) so tests can run the public API over a test engine. */
     @Volatile internal var engine: Engine? = null
@@ -180,6 +180,19 @@ public object Unolink {
     @JvmOverloads
     public fun signUpSkipped(properties: Map<String, Any?>? = null) {
         withEngine { it.track("sign_up_skipped", properties, null) }
+    }
+
+    /** The answers [heardFrom] takes. Map your own onboarding options to these. */
+    @JvmField
+    public val HEARD_FROM_SOURCES: List<String> = listOf("app_store", "google_play", "search", "tiktok", "instagram", "facebook", "youtube", "x", "reddit", "friend", "ad", "podcast", "blog", "other")
+
+    /**
+     * "Where did you hear about us?": the user's answer from your onboarding, as one of [HEARD_FROM_SOURCES] (anything
+     * else is stored as "other"). Free, and the latest answer counts. Never send what the user typed.
+     */
+    @JvmStatic
+    public fun heardFrom(source: String) {
+        withEngine { it.track("heard_from", mapOf("source" to source), null) }
     }
 
     /** The user closed the store's purchase sheet without paying. */

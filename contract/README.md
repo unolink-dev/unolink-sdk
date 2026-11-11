@@ -77,6 +77,7 @@ most 200 characters), numbers or booleans; 4 KB in total.
 | `onboarding_step` | app: an onboarding screen **appeared**; properties `step`, `index`, `flow` only (see below) | no |
 | `onboarding_skipped` | app: the user tapped Skip; `step` is the screen they tapped it on (see below) | no |
 | `onboarding_completed` | app: the user finished the onboarding questions/screens (before any paywall or sign-up that follows them); optional `flow` | yes |
+| `heard_from` | app: the answer to "Where did you hear about us?"; property `source` only, one of the list below (anything else is stored as `other`) | no |
 | `paywall_viewed`, `paywall_skipped` | app; property `placement` says where: `onboarding`, `feature_gate`, or the app's own name | yes |
 | `sign_up` | app: an account was created (often after the paywall) | yes |
 | `sign_in` | app: someone signed in to an account they already had (a returning user) | yes |
@@ -89,6 +90,15 @@ Funnel steps are per app and configurable in the dashboard (any of these names, 
 screens come in a different order still get a meaningful funnel. Each step counts installs that sent the event at any
 time: the order never affects whether data is collected.
 `onboarding_step` and `onboarding_skipped` are not funnel steps: the dashboard's Onboarding view orders them.
+
+### Where they heard about us
+
+`heard_from` is the app's answer to "Where did you hear about us?", usually an onboarding question. Its only property
+is `source`, one of: `app_store`, `google_play`, `search`, `tiktok`, `instagram`, `facebook`, `youtube`, `x`,
+`reddit`, `friend`, `ad`, `podcast`, `blog`, `other`. Any other value is stored as `other`; other properties are
+dropped. Never send what the user typed. It is free (not counted toward the quota, kept over the hard cap), at most 10
+per install, and the install keeps the latest answer. It is not a funnel step: the dashboard's Onboarding tab and
+Journeys show it.
 
 ### Onboarding progress
 

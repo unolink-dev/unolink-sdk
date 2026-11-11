@@ -36,7 +36,7 @@ class Unolink {
   Unolink._();
 
   /// This package's version (sent with every install as the SDK version).
-  static const String version = '0.3.3';
+  static const String version = '0.3.4';
 
   static const MethodChannel _channel = MethodChannel('dev.unolink/sdk');
   static void Function(UnolinkDeepLink link)? _deepLinkListener;
@@ -109,6 +109,13 @@ class Unolink {
 
   /// The user chose to continue without an account (guest mode) on a sign-up screen. Not a drop-off.
   static Future<void> signUpSkipped([Map<String, Object>? properties]) => track('sign_up_skipped', properties);
+
+  /// The answers [heardFrom] takes ("Where did you hear about us?"). Map your own onboarding options to these.
+  static const heardFromSources = ['app_store', 'google_play', 'search', 'tiktok', 'instagram', 'facebook', 'youtube', 'x', 'reddit', 'friend', 'ad', 'podcast', 'blog', 'other'];
+
+  /// "Where did you hear about us?": the user's answer from your onboarding, as one of [heardFromSources] (anything else
+  /// is stored as "other"). Free, and the latest answer counts. Never send what the user typed.
+  static Future<void> heardFrom(String source) => track('heard_from', {'source': source});
 
   /// A free trial started. Not needed when RevenueCat is connected to Unolink.
   static Future<void> trialStarted({String? productId, Map<String, Object>? properties}) =>
