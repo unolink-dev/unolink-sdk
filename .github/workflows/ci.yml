@@ -109,6 +109,9 @@ jobs:
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
+          # Pinned: Flutter 3.50.0 deprecated package:flutter/material.dart, and analyze fails on that notice in the
+          # example app. Raise it on purpose (and fix what it flags), not when a new stable lands. Keep ci and release equal.
+          flutter-version: 3.47.9
       - name: Copy the native SDK cores into the plugin
         run: flutter/tool/sync_native.sh
       - name: Analyze and test
